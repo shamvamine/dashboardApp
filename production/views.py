@@ -60,14 +60,6 @@ def getSafetyData():                                                        #saf
     return mtd_summary
 
 def getMTDs():
-
-     # Get the current month and year
-    current_date            = timezone.now()
-    current_month           = current_date.month
-    current_month_name      = calendar.month_name[current_month]
-    current_year            = current_date.year   
-
-    # Filter Summaries objects fordef getMTDs():
     # Get the current month and year
     current_date = timezone.now()
     current_month = current_date.month
@@ -86,8 +78,8 @@ def getMTDs():
         ore_gen = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
         gold = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
         grade = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
-        # reconciled_grade = mtd_summaries.aggregate(Sum('reconciled_grade'))['reconciled_grade__sum'] or 0
-         # For reconciled grade, consider only non-zero values
+        
+        # For reconciled grade, consider only non-zero values
         non_zero_reconciled_grades = mtd_summaries.filter(reconciled_grade__gt=0)
         
         if non_zero_reconciled_grades.exists():
@@ -101,7 +93,7 @@ def getMTDs():
             reconciled_grade = 0
     else:
         # If no data exists, set all metrics to 0
-        ug_tonnes, op_tonnes, milled_tonnes, dev_drilling, ore_gen, gold, grade = 0, 0, 0, 0, 0, 0, 0
+        ug_tonnes, op_tonnes, milled_tonnes, dev_drilling, ore_gen, gold, grade, reconciled_grade = 0, 0, 0, 0, 0, 0, 0, 0
     
     # Pass MTD values to the template
     mtd_summary = {
@@ -112,10 +104,70 @@ def getMTDs():
         'ore_gen': ore_gen,
         'gold': round((float(gold) * 32.1507), 3),
         'grade': float(grade),
-        'reconciled_grade': round(float(reconciled_grade),3)
+        'reconciled_grade': round(float(reconciled_grade), 3)
     }
     
-    return mtd_summary 
+    return mtd_summary
+
+
+
+# def getMTDs():
+
+#      # Get the current month and year
+#     current_date            = timezone.now()
+#     current_month           = current_date.month
+#     current_month_name      = calendar.month_name[current_month]
+#     current_year            = current_date.year   
+
+#     # Filter Summaries objects fordef getMTDs():
+#     # Get the current month and year
+#     current_date = timezone.now()
+#     current_month = current_date.month
+#     current_month_name = calendar.month_name[current_month]
+#     current_year = current_date.year   
+
+#     # Filter Summaries objects for the current month
+#     mtd_summaries = Data.objects.filter(date__month=current_month, date__year=current_year)
+    
+#     if mtd_summaries.exists():
+#         # Calculate MTD values if data exists
+#         ug_tonnes = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
+#         op_tonnes = mtd_summaries.aggregate(Sum('op_tonnes'))['op_tonnes__sum'] or 0
+#         milled_tonnes = mtd_summaries.aggregate(Sum('milled_tonnes'))['milled_tonnes__sum'] or 0
+#         dev_drilling = mtd_summaries.aggregate(Sum('dev_drilling'))['dev_drilling__sum'] or 0
+#         ore_gen = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
+#         gold = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
+#         grade = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
+#         # reconciled_grade = mtd_summaries.aggregate(Sum('reconciled_grade'))['reconciled_grade__sum'] or 0
+#          # For reconciled grade, consider only non-zero values
+#         non_zero_reconciled_grades = mtd_summaries.filter(reconciled_grade__gt=0)
+        
+#         if non_zero_reconciled_grades.exists():
+#             # Calculate the sum and count of non-zero reconciled grades
+#             reconciled_grade_sum = non_zero_reconciled_grades.aggregate(Sum('reconciled_grade'))['reconciled_grade__sum'] or 0
+#             reconciled_grade_count = non_zero_reconciled_grades.count()
+
+#             # Calculate average reconciled grade (avoid division by zero)
+#             reconciled_grade = reconciled_grade_sum / reconciled_grade_count if reconciled_grade_count > 0 else 0
+#         else:
+#             reconciled_grade = 0
+#     else:
+#         # If no data exists, set all metrics to 0
+#         ug_tonnes, op_tonnes, milled_tonnes, dev_drilling, ore_gen, gold, grade = 0, 0, 0, 0, 0, 0, 0
+    
+#     # Pass MTD values to the template
+#     mtd_summary = {
+#         'current_month': current_month,
+#         'rom': ug_tonnes + op_tonnes,
+#         'milled_tonnes': milled_tonnes,
+#         'dev_drilling': dev_drilling,
+#         'ore_gen': ore_gen,
+#         'gold': round((float(gold) * 32.1507), 3),
+#         'grade': float(grade),
+#         'reconciled_grade': round(float(reconciled_grade),3)
+#     }
+    
+#     return mtd_summary 
 
 def newGradeData():
     currentDate             = datetime.date.today()
