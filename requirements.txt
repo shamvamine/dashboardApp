@@ -1,5 +1,4 @@
 django==5.0.7
-asgiref==3.6.0
 charset-normalizer==3.1.0
 chartjs==1.2
 crispy-bootstrap5==0.7
