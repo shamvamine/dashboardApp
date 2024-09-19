@@ -1,0 +1,95 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+    <style type="text/css">
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+  
+      .card-header .btn {
+        margin-left: auto;
+      }
+    </style>
+  </head>
+<main>
+    <div class="card mb-4">
+        <br />
+        <div class="card-header" style="justify-content: space-between">
+        <i class="fas fa-table me-1"></i>
+        {{title}}
+        <a
+            href="/"
+            class="btn btn-primary ml-auto"
+            style="margin-left: auto"
+            >Return to Dashboard</a>
+        </div>
+        <div class="card mb-5">
+           <!-- Date Pickers for Month and Year -->
+           <div class="row justify-content-center">
+            <div class="col-md-3">
+                <label for="monthPicker">Select Month:</label>
+                <input type="month" id="monthPicker" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label for="yearPicker">Select Year:</label>
+                <input type="number" id="yearPicker" class="form-control" min="2000" max="2100" placeholder="YYYY" />
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button id="updateCharts" class="btn btn-primary">Update Charts</button>
+            </div>
+        </div>
+        <br>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-xl-6">
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <i class="fas fa-chart-area me-1"></i>
+                      M.T.D Trucking (Underground vs Open Pit)
+                    </div>
+                    <div class="card-body"><canvas id="newRomChart" width="100%" height="40"></canvas></div>
+                  </div>
+                </div>
+                <div class="col-xl-6">
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <i class="fas fa-chart-area me-1"></i>
+                      M.T.D Run Of Mine Analysis
+                    </div>
+                    <div class="card-body"><canvas id="ROMAreaChart" width="100%" height="40"></canvas></div>
+                </div>
+                
+            </div>
+
+        </div>
+    </div>
+  
+</main>
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>   
+    var romChartData = JSON.parse('{{rom_chart_data|escapejs}}') 
+    var chartData = JSON.parse('{{ chart_data|escapejs }}');
+</script>
+
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+crossorigin="anonymous"
+></script>
+
+
+<script src="/static/assets/demo/chart-rom-modal.js"></script>
+<script src="/static/assets/demo/prod-chart.js"></script>
+<script src="/static/assets/demo/chart-rom.js"></script>
+
+
+<script
+  src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"
+  crossorigin="anonymous"
+></script>
+{% endblock javascripts %}
+
+{%endblock content%}

@@ -1,0 +1,557 @@
+{% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+  .scrolling-text{
+    white-space: nowrap;
+    overflow: hidden;
+    box-sizing:border-box;
+    margin-top:40px;
+    margin-bottom: -25px
+  }
+
+  .scrolling-text span{
+    display: inline-block;
+    padding-left:50%;
+    animation: scrolling 45s linear infinite;
+    white-space: nowrap;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+
+  }
+  @keyframes scrolling{
+    from{
+      transform: translateX(100%)
+    }
+    to{
+      transform: translateX(-100%)
+    }
+  }
+</style>
+{% endblock stylesheets %} {% block content %}
+
+<main>
+  <!--SCROLLING Text-->
+  <div class="scrolling-text">
+    <span>Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 1 219 296 Fatality Free Shifts as of 31 August 2024 ~ |~ Recovery was at {{summary.recovery_perc}}% ~ | ~ ZESA Downtime - 36hrs as of week 1 September ~ | ~ DQS Recertification Audit Completed. 2 ISO Certificates Retained QMS Certificate & EMS Certificate ~ | ~ MY SAFETY MY RESPONSIBILITY. TOTAL ELIMINATION OF ACCIDENTS -  USARASE TEA !!!</span>
+  </div>
+  <div class="container-fluid px-4">
+    <h1 class="mt-4">Perfomance Dashboard</h1>
+    <ol class="breadcrumb mb-4">
+      <h3><li class="breadcrumb-item active">Dashboard Highlight for {{summary.date}}</li></h3>
+    </ol>
+    <div class="row">
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-gold text-white mb-4">
+          <div class="card-body">
+            <h5>Safety Performance</h5>
+              <h5> Month {{performance.current_month}}</h5>
+            <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                      <th></th>  
+                      <th>MTD</th>
+                      <th>YTD</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Fatality</td>
+                        <td>{{ perfomance.fatality_mtd}}</td>
+                        <td>{{perfomance.fatality_ytd}}</td>
+                    </tr>
+                    <tr>
+                        <td>LTI</td>
+                        <td>{{ perfomance.lti_mtd}}</td>
+                        <td>{{perfomance.lti_ytd}}</td>
+                    </tr>
+                    <tr>
+                        <td>NLTI</td>
+                        <td> {{ perfomance.nlti_mtd}}</td>
+                        <td>{{perfomance.nlti_ytd}}</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between">
+            <a class="small text-white stretched-link" href="{%url 'rom-summary'%}">View Details</a>
+            {% comment %} <a class="small text-white stretched-link" href="{%url 'rom-summary'%}" data-toggle="modal" data-target="#detailsModal">View Details</a> {% endcomment %}
+            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-grey text-white mb-4">
+          <div class="card-body">
+            <h4>R.O.M Tonnes</h4>
+            <h5>
+              {% if deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta > 0 %}
+                  <span style="color: green;">
+                      &#9650; <!-- Up arrow -->
+                      {{ deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.rom|floatformat:1 }}%) -->
+              {% elif deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta < 0 %}
+                  <span style="color: red;">
+                      &#9660; <!-- Down arrow -->
+                      {{ deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta }}
+                     
+                  </span>
+                  <!-- - ({{ percentages_remaining.rom|floatformat:1 }}%) -->
+              {% else %}
+                  <span style="color: gray;">
+                      &#8212; <!-- Dash for no change -->
+                      {{ deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.rom|floatformat:1 }}%) -->
+              {% endif %}
+          </h5>
+            {% comment %} <h5>{{deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta}}</h5> {% endcomment %}
+          
+             <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{plan.month_name}} MTD</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plan</td>
+                        <td>{{plan.rom}}</td>
+                    </tr>
+                    <tr>
+                        <td>Budget</td>
+                        <td>{{budget.rom}}</td>
+                    </tr>
+                    <tr>
+                      <td>Actual</td>
+                      <td>{{mtd.rom}}</td>
+                  </tr>
+                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+          </div>
+          
+          <div class="card-footer d-flex align-items-center justify-content-between">
+            <a class="small text-white stretched-link" href="{%url 'rom-summary'%}">View Details</a>
+            {% comment %} <a class="small text-white stretched-link" href="{%url 'rom-summary'%}" data-toggle="modal" data-target="#detailsModal">View Details</a> {% endcomment %}
+            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+          </div>
+            <!-- Modal -->
+            <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="detailsModalLabel">Details</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                          </button>
+                      </div>
+                      <div class="modal-body">
+                          <!-- Chart container -->
+                          <canvas id="newRomChart" width="100%" height="100"></canvas>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                  </div>
+              </div>
+            
+
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-gold text-white mb-4">
+          <div class="card-body">
+            <h4>Milled Tonnes</h4>
+            <h5>
+              {% if deltas.milled_tonnes_delta > 0 %}
+                  <span style="color: green;">
+                      &#9650; <!-- Up arrow -->
+                      {{ deltas.milled_tonnes_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.milled_tonnes|floatformat:1 }}%) -->
+              {% elif deltas.milled_tonnes_delta < 0 %}
+                  <span style="color: red;">
+                      &#9660; <!-- Down arrow -->
+                      {{ deltas.milled_tonnes_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.milled_tonnes|floatformat:1 }}%) -->
+              {% else %}
+                  <span style="color: gray;">
+                      &#8212; <!-- Dash for no change -->
+                      {{ deltas.milled_tonnes_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.milled_tonnes|floatformat:1 }}%) -->
+              {% endif %}
+          </h5>
+         
+            {% comment %} <h5>{{deltas.milled_tonnes_delta}}</h5> {% endcomment %}
+            <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{plan.month_name}} MTD</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plan</td>
+                        <td>{{ plan.milled_tonnes }}</td>
+                    </tr>
+                    <tr>
+                        <td>Budget</td>
+                        <td>{{ budget.milled_tonnes}}</td>
+                    </tr>
+                    <tr>
+                      <td>Actual</td>
+                      <td>{{ mtd.milled_tonnes}}</td>
+                  </tr>
+                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between">
+            <a class="small text-white stretched-link" href="#">View Details</a>
+            <div class="small text-white"><i class="fas fa-angle-right"></i></div>            
+          </div>
+          <!-- Modal -->
+          <div class="modal fade" id="milledModal" tabindex="-1" role="dialog" aria-labelledby="milledModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="milledModalLabel">Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                      <h4>
+                        This Feature is still under development
+                      </h4>
+                        {{ modal_content }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-grey text-white mb-4">
+          <div class="card-body">
+            <h4>Grade</h4>
+            <h5>
+              {% if deltas.grade_delta > 0 %}
+                  <span style="color: green;">
+                      &#9650; <!-- Up arrow -->
+                      {{ deltas.grade_delta}}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.ore_gen|floatformat:1 }}%) -->
+              {% elif deltas.grade_delta < 0 %}
+                  <span style="color: red;">
+                      &#9660; <!-- Down arrow -->
+                      {{ deltas.grade_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.ore_gen|floatformat:1 }}%) -->
+              {% else %}
+                  <span style="color: gray;">
+                      &#8212; <!-- Dash for no change -->
+                      {{ deltas.grade_delta }}
+                      
+                  </span>
+                  <!-- - ({{ percentages_remaining.ore_gen|floatformat:1 }}%) -->
+              {% endif %}
+          </h5>
+            {% comment %} <h5>{{summary.ore_gen}}</h5> {% endcomment %}
+            <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{plan.month_name}} MTD</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plan</td>
+                        <td>{{ plan.grade }}</td>
+                    </tr>
+                    <tr>
+                        <td>Budget</td>
+                        <td>{{ budget.grade}}</td>
+                    </tr>
+                    <tr>
+                      <td>Progressive</td>
+                      <td>{{ mtd.reconciled_grade}}</td>
+                  </tr>
+                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between">
+            <a class="small text-white stretched-link" href="{%url 'tramming-details'%}">View Details</a>
+            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-gold text-white mb-4">
+          <div class="card-body">
+            <h4>Gold Ounces</h4>
+            <h5>
+              {% if deltas.gold_delta > 0 %}
+                  <span style="color: green;">
+                      &#9650; <!-- Up arrow -->
+                      {{ deltas.gold_delta }}
+                      
+                  </span>
+                    <!-- - ({{ percentages_remaining.gold|floatformat:1 }}%) -->
+              {% elif deltas.gold_delta < 0 %}
+                  <span style="color: red;">
+                      &#9660; <!-- Down arrow -->
+                      {{ deltas.gold_delta }}
+                      
+                  </span>
+                    <!-- - ({{ percentages_remaining.gold|floatformat:1 }}%) -->
+              {% else %}
+                  <span style="color: gray;">
+                      &#8212; <!-- Dash for no change -->
+                      {{ deltas.gold_delta }}
+                      
+                  </span>
+                    <!-- - ({{ percentages_remaining.gold|floatformat:1 }}%) -->
+              {% endif %}
+          </h5>
+            {% comment %} <h5>{{summary.gold}}</h5> {% endcomment %}
+            <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{plan.month_name}} MTD</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plan</td>
+                        <td>{{ plan.gold}}</td>
+                    </tr>
+                    <tr>
+                        <td>Budget</td>
+                        <td>{{ budget.gold}}</td>
+                    </tr>
+                    <tr>
+                      <td>Actual</td>
+                      <td>{{ mtd.gold}}</td>
+                  </tr>
+                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between">
+            <a class="small text-white stretched-link" href="{%url 'gold-summary'%}">View Details</a>
+
+            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+          </div>
+          <!-- Modal -->
+          <div class="modal fade" id="goldModal" tabindex="-1" role="dialog" aria-labelledby="goldModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="goldModalLabel">Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                      <h4>
+                        This Feature is still under development
+                      </h4>
+                        {{ modal_content }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-6">
+        <div class="card bg-grey text-white mb-4">
+          <div class="card-body">
+            <h4> Cash Costs</h4>
+              <h5>{{costs.date}}</h5>
+            <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                      <th></th>  
+                      <th>Cost ($)</th>
+                   
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>C1</td>
+                        <td>{{ costs.c1}}</td>
+                        
+                    </tr>
+                    <tr>
+                        <td>C2</td>
+                        <td>{{ costs.c2}}</td>
+                        
+                    </tr>
+                    <tr>
+                        <td>C3</td>
+                        <td> {{ costs.c3}}</td>
+                        
+                    </tr>                    
+                </tbody>
+            </table>
+            <!-- End of Table -->
+            <div class="card-footer d-flex align-items-center justify-content-between">
+              <a class="small text-white stretched-link" href="{%url 'costs-summary'%}">View Details</a>
+  
+              <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+               
+          </div>
+      
+         
+        </div>
+      </div>
+      
+      
+    </div>
+
+    <div class="row">
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            M.T.D Trucking Tonnage vs Milled Tonnage
+          </div>
+          <div class="card-body"><canvas id="newAreaChart" width="100%" height="40"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-bar me-1"></i>
+            M.T.D Progressive Grade
+          </div>
+          <div class="card-body"><canvas id="newBarChart" width="100%" height="40"></canvas></div>
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+    <!-- Specific Page JS goes HERE  -->
+    {% block javascripts %}
+
+    <script>
+        var chartData = JSON.parse('{{ chart_data|escapejs }}');
+        var barChartData = JSON.parse('{{bar_chart_data|escapejs}}')
+        
+
+    </script>
+
+    {% comment %} script for ROM tonnes modal {% endcomment %}
+    <script>
+    $(document).ready(function() {
+      // Event handler for modal show event
+      $('#detailsModal').on('show.bs.modal', function() {
+          // Initialize Chart.js with fetched data
+          var ctx = document.getElementById("newRomChart");
+          var myLineChart = new Chart(ctx, {
+              type: "line",
+              data: {
+                  labels: romChartData.dates,
+                  datasets: [
+                      {
+                          label: "Underground Trucked",
+                          lineTension: 0.3,
+                          backgroundColor: "rgba(2,117,216,0.2)",
+                          borderColor: "rgba(2,117,216,1)",
+                          pointRadius: 5,
+                          pointBackgroundColor: "rgba(2,117,216,1)",
+                          pointBorderColor: "rgba(255,255,255,0.8)",
+                          pointHoverRadius: 5,
+                          pointHoverBackgroundColor: "rgba(2,117,216,1)",
+                          pointHitRadius: 50,
+                          pointBorderWidth: 2,
+                          data: romChartData.rom,
+                      },
+                      {
+                          label: "Open Pit Trucked",
+                          lineTension: 0.3,
+                          backgroundColor: "rgba(255,193,7,0.2)",
+                          borderColor: "rgba(255,193,7,1)",
+                          pointRadius: 5,
+                          pointBackgroundColor: "rgba(255,193,7,1)",
+                          pointBorderColor: "rgba(255,255,255,0.8)",
+                          pointHoverRadius: 5,
+                          pointHoverBackgroundColor: "rgba(255,193,7,1)",
+                          pointHitRadius: 50,
+                          pointBorderWidth: 2,
+                          data: romChartData.milled_tonnage,
+                      },
+                  ],
+              },
+              options: {
+                  // Add your chart options here
+              },
+          });
+      });
+  });
+</script>
+{% comment %} end of ROM modal Script {% endcomment %}
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/static/assets/demo/chart-area-demo.js"></script>
+    <script src="/static/assets/demo/prod-chart.js"></script>
+    <script src="/static/assets/demo/prod-bar-chart.js"></script>
+    <script src="/static/assets/demo/chart-bar-demo.js"></script>
+    <script src="/static/assets/demo/chart-rom-modal.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/static/assets/js/datatables-simple-demo.js"></script>
+
+    {% endblock javascripts %}
+  </div>
+</main>

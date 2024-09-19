@@ -1,0 +1,77 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+  <style type="text/css">
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header .btn {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<main>
+  <div class="card mb-4">
+    <br />
+    <div class="card-header" style="justify-content: space-between">
+      <i class="fas fa-table me-1"></i>
+      {{title}}
+      <a
+        href="{%url 'add-tramming'%}"
+        class="btn btn-primary ml-auto"
+        style="margin-left: auto"
+        >Add Record</a
+      >
+    </div>
+    <div class="card-body">
+      <div class="table-responsive" style="margin-top: 10px">
+        <table
+          id="example"
+          class="table table-striped table-bordered"
+          style="width: 100%"
+        >
+          <thead class="bg-success text-white">
+            <tr>
+              <th scope="col" class="text-center">#</th>
+              <th scope="col" class="text-center">Date</th>
+              <th scope="col" class="text-center">Western Top (t)</th>
+              <th scope="col" class="text-center">Cymric Top (t)</th>
+              <th scope="col" class="text-center">Cymric Bottom (t)</th>
+              <th scope="col" class="text-center">13 Level (t)</th>
+              <th scope="col" class="text-center">15 Level (t)</th>
+              <th scope="col" class="text-center">Far East (t)</th>
+              <th scope="col" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in trammingData %}
+            <tr>
+              <th class="align-middle text-center" scope="row">
+                {{ forloop.counter}}
+              </th>
+              <td class="align-middle text-center">{{ record.date }}</td>
+              <td class="align-middle text-center">{{ record.western_top }}</td>
+              <td class="align-middle text-center">{{ record.cymric_top }}</td>
+              <td class="align-middle text-center">{{ record.cymric_bottom }}</td>
+              <td class="align-middle text-center">{{ record.l_13 }}</td>
+              <td class="align-middle text-center">{{ record.l_15 }}</td>
+              <td class="align-middle text-center">{{ record.far_east }}</td>
+              <td class="align-middle text-center">
+                <a
+                  href="{% url 'update-tramming' record.pk%}"
+                  class="btn btn-primary"
+                  >Update</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+{%endblock content%}

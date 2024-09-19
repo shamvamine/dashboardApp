@@ -1,0 +1,291 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+    <style type="text/css">
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+  
+      .card-header .btn {
+        margin-left: auto;
+      }
+    </style>
+  </head>
+<main>
+    <div class="card mb-4">
+        <br />
+        <div class="card-header" style="justify-content: space-between">
+        <i class="fas fa-table me-1"></i>
+       {{title}}
+
+        <a
+            href="/"
+            class="btn btn-primary ml-auto"
+            style="margin-left: auto"
+            >Return to Dashboard</a
+        >
+        </div>
+        <div class="card mb-5">
+          <!-- Date Pickers for Month and Year -->
+          <div class="row justify-content-center">
+           <div class="col-md-3">
+               <label for="monthPicker">Select Month:</label>
+               <input type="month" id="monthPicker" class="form-control" />
+           </div>
+           <div class="col-md-3">
+               <label for="yearPicker">Select Year:</label>
+               <input type="number" id="yearPicker" class="form-control" min="2000" max="2100" placeholder="YYYY" />
+           </div>
+           <div class="col-md-2 align-self-end">
+               <button id="updateCharts" class="btn btn-primary">Update Charts</button>
+           </div>
+       </div>
+       <br>
+       </div>
+        <div class="card-body">
+            <div class="row">
+
+              <div class="col-xl-6 card bg-gold text-white mb-4">
+                <div class="card-header">
+                  <i class="fas fa-chart-area me-1"></i>
+                  M.T.D Cost Analysis
+                </div>
+                  
+                  <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Cost</th>
+                        <th>Actual</th>
+                        <th>Budget</th>
+                        <th>Variance</th>                                      
+                      </tr>
+                    </thead>
+  
+                    <tbody>                
+                      <tr>
+                        <td>Mining</td>
+                        <td class="{% if mtd_data.mtd_mining > mtd_budget.mtd_budget_mining %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_mining|floatformat:2 }}
+                        </td>                    
+                        <td>{{ mtd_budget.mtd_budget_mining|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.mining_variance|floatformat:2 }}
+                          {% if variances.mining_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.mining_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>
+                    
+                      <tr>
+                        <td>Mining Engineering</td>
+                        <td class="{% if mtd_data.mtd_mine_engineering > mtd_budget.mtd_budget_mine_engineering %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_mine_engineering|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_mine_engineering|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.mine_engineering_variance|floatformat:2 }}
+                          {% if variances.mine_engineering_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.mine_engineering_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>
+                    
+                      <tr>
+                        <td>Processing Costs</td>
+                        <td class="{% if mtd_data.mtd_processing > mtd_budget.mtd_budget_processing %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_processing|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_processing|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.processing_variance|floatformat:2 }}
+                          {% if variances.processing_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.processing_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                      
+                      </tr>
+                    
+                      <tr>
+                        <td>Hauling Costs</td>
+                        <td class="{% if mtd_data.mtd_hauling > mtd_budget.mtd_budget_hauling %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_hauling|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_hauling|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.hauling_variance|floatformat:2 }}
+                          {% if variances.hauling_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.hauling_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>
+                    
+                      <tr>
+                        <td>Technical Services</td>
+                        <td class="{% if mtd_data.mtd_tsd > mtd_budget.mtd_budget_tsd %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_tsd|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_tsd|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.tsd_variance|floatformat:2 }}
+                          {% if variances.tsd_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.tsd_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>
+                    
+                      <tr>
+                        <td>Owners Team</td>
+                        <td class="{% if mtd_data.mtd_owners > mtd_budget.mtd_budget_owners %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_owners|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_owners|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.owners_variance|floatformat:2 }}
+                          {% if variances.owners_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.owners_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>
+                    
+                      <tr>
+                        <td>Open Pit</td>
+                        <td class="{% if mtd_data.mtd_open_pit > mtd_budget.mtd_budget_open_pit %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_open_pit|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_open_pit|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.open_pit_variance|floatformat:2 }}
+                          {% if variances.open_pit_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.open_pit_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td> 
+                      </tr>
+                    
+                      <tr>
+                        <td>Depreciation</td>
+                        <td class="{% if mtd_data.mtd_depreciation > mtd_budget.mtd_budget_depreciation %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_depreciation|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_depreciation|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.depreciation_variance|floatformat:2 }}
+                          {% if variances.depreciation_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.depreciation_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                    
+                      </tr>
+                    
+                      <tr>
+                        <td>Other Costs (c3)</td>
+                        <td class="{% if mtd_data.mtd_c3_cost > mtd_budget.mtd_budget_c3_cost %}text-danger{% else %}text-success{% endif %}">
+                          {{ mtd_data.mtd_c3_cost|floatformat:2 }}
+                        </td>
+                        <td>{{ mtd_budget.mtd_budget_c3_cost|floatformat:2 }}</td>
+                        <td>
+                          {{ variances.c3_cost_variance|floatformat:2 }}
+                          {% if variances.c3_cost_variance > 0 %}
+                            <i class="fa fa-arrow-down text-danger"></i>
+                          {% elif variances.c3_cost_variance < 0 %}
+                            <i class="fa fa-arrow-up text-success"></i>
+                          {% else %}
+                            <i class="fa fa-minus text-muted"></i>
+                          {% endif %}
+                        </td>                                       
+                      </tr>               
+                    </tbody>
+                  </table>
+                               
+                  </div>
+                 
+
+               
+                <div class="col-xl-6">
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <i class="fas fa-chart-area me-1"></i>
+                      M.T.D Cash Costs
+                    </div>
+                    <div class="card-body"><canvas id="CostChart" width="100%" height="40"></canvas></div>
+                    <div class ="card-body">
+                      <table class=" bg-gold table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>C1 Total</th>
+                            <th>C2 Total</th>
+                            <th>C3 Total</th>                                      
+                          </tr>
+                        </thead>
+                        <tbody>                
+                          <tr>
+                            <td class="{% if mtd_data.mtd_total_c1 > mtd_budget.mtd_budget_total_c1 %}text-danger{% else %}text-success{% endif %}">
+                              {{ mtd_data.mtd_total_c1|floatformat:2 }}
+                            </td>
+                            <td class="{% if mtd_data.mtd_total_c2 > mtd_budget.mtd_budget_total_c2 %}text-danger{% else %}text-success{% endif %}">
+                              {{ mtd_data.mtd_total_c2|floatformat:2 }}
+                            </td>                    
+                            <td class="{% if mtd_data.mtd_total_c3 > mtd_budget.mtd_budget_total_c3 %}text-danger{% else %}text-success{% endif %}">
+                              {{ mtd_data.mtd_total_c3|floatformat:2 }}
+                            </td>                                      
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                </div>
+                
+            </div>
+
+        </div>
+    </div>
+    <script>
+      var chartInfo = JSON.parse('{{ cost_chart|escapejs }}');
+      var priceInfo = JSON.parse('{{ price_chart|escapejs }}')
+      
+
+  </script>
+    <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <script src="/static/assets/demo/chart-costs.js"></script>
+  <script src="/static/assets/demo/chart-price.js"></script>
+  
+  <script
+    src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"
+    crossorigin="anonymous"
+  ></script>
+</main>
+
+{%endblock content%}

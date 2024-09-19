@@ -1,0 +1,79 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+  <style type="text/css">
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header .btn {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<main>
+  <div class="card mb-4">
+    <br />
+    <div class="card-header" style="justify-content: space-between">
+      <i class="fas fa-table me-1"></i>
+      Daily CIL, Scats & Tails
+
+      <a
+        href="{%url 'add-scats'%}"
+        class="btn btn-primary ml-auto"
+        style="margin-left: auto"
+        >Add Record</a
+      >
+    </div>
+    <div class="card-body">
+      <div class="table-responsive" style="margin-top: 10px">
+        <table
+          id="example"
+          class="table table-striped table-bordered"
+          style="width: 100%"
+        >
+          <thead class="bg-success text-white">
+            <tr>
+              <th scope="col" class="text-center">#</th>
+              <th scope="col" class="text-center">Date</th>
+              <th scope="col" class="text-center">CIL</th>
+              <th scope="col" class="text-center">SCATS</th>
+              <th scope="col" class="text-center">GRG</th>
+              <th scope="col" class="text-center">Total</th>             
+              <th scope="col" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in scatsData %}
+            <tr>
+              <th class="align-middle text-center" scope="row">
+                {{ forloop.counter}}
+              </th>
+              <td class="align-middle text-center">{{ record.date }}</td>
+              <td class="align-middle text-center">
+                {{ record.cil}}
+              </td>
+              <td class="align-middle text-center">
+                {{ record.scats }}
+              </td>
+              <td class="align-middle text-center">{{ record.grg }}</td>
+              <td class="align-middle text-center">{{ record.total }}</td>
+              
+              <td class="align-middle text-center">
+                <a
+                  href="#"
+                  class="btn btn-primary"
+                  >Update</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+{%endblock content%}
