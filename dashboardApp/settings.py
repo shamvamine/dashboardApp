@@ -21,7 +21,7 @@ SECRET_KEY = 'django-insecure-v%)8rtal&ag=2!b8j378f@(#%m@dn(m6^6e4x=v%w1azy1+ex5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'shamvagold.co.zw', 'app.shamvagold.co.zw','192.168.2.84']
+ALLOWED_HOSTS = ['*', 'render.com','https://smc-dashboardapp.onrender.com','shamvagold.co.zw', 'app.shamvagold.co.zw','192.168.2.84']
 
 
 # Application definition
