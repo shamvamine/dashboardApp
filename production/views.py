@@ -380,17 +380,19 @@ def get_daily_deltas():
     # Find the latest non-zero gold record
     latest_non_zero_gold_record = Data.objects.filter(gold__gt=0).order_by('-date').first()
 
-    # Find the previous non-zero gold record
-    previous_non_zero_gold_record = Data.objects.filter(gold__gt=0, date__lt=latest_non_zero_gold_record.date).order_by('-date').first()
-
-    # If no valid non-zero records are found, set deltas accordingly
+    # Initialize gold_delta in case we can't calculate it
     gold_delta = None
-    if latest_non_zero_gold_record and previous_non_zero_gold_record:
-        # Calculate gold delta between the latest and previous non-zero values
-        gold_delta = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
-    elif latest_non_zero_gold_record:
-        # If only one non-zero value exists, use that for the month (no delta comparison)
-        gold_delta = round(latest_non_zero_gold_record.gold, 4)
+
+    if latest_non_zero_gold_record:
+        # Find the previous non-zero gold record
+        previous_non_zero_gold_record = Data.objects.filter(gold__gt=0, date__lt=latest_non_zero_gold_record.date).order_by('-date').first()
+
+        if previous_non_zero_gold_record:
+            # Calculate gold delta between the latest and previous non-zero values
+            gold_delta = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
+        else:
+            # If only one non-zero value exists, use that for the month (no delta comparison)
+            gold_delta = round(latest_non_zero_gold_record.gold, 4)
 
     # Calculate the deltas between the last recorded day and the previous day
     deltas = {
@@ -399,13 +401,14 @@ def get_daily_deltas():
         'milled_tonnes_delta': round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
         'dev_drilling_delta': round(current_record.dev_drilling - prev_record.dev_drilling, 4),
         'ore_gen_delta': round(current_record.ore_gen - prev_record.ore_gen, 4),
-        'gold_delta': round(current_record.gold - prev_record.gold, 4),
+        'gold_delta': gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
         'grade_delta': current_record.reconciled_grade - prev_record.reconciled_grade,
     }
 
-    print('curr',current_record.grade, 'prev',prev_record.grade)
+    print('curr', current_record.grade, 'prev', prev_record.grade)
 
     return deltas
+
 
 def getData(request):
     current_date            = timezone.now()

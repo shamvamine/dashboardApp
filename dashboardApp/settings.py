@@ -2,6 +2,9 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
+
+
 
 load_dotenv()
 
@@ -37,9 +40,6 @@ INSTALLED_APPS = [
     'production',
 
     'crispy_bootstrap5',
-
-       
-
 
 ]
 
@@ -91,19 +91,30 @@ WSGI_APPLICATION = 'dashboardApp.wsgi.application'
 
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-if os.environ.get('DB_ENGINE') and os.environ.get('DB_ENGINE') == "mysql":
-    DATABASES = { 
-      'default': {
-        'ENGINE'  : 'django.db.backends.mysql', 
-        'NAME'    : os.getenv('DB_NAME'     , 'dashboard_db'),
-        'USER'    : os.getenv('DB_USERNAME' , 'root'),
-        'PASSWORD': os.getenv('DB_PASS'     , ''),
-        'HOST'    : os.getenv('DB_HOST'     , 'localhost'),
-        'PORT'    : os.getenv('DB_PORT'     , 3306),
-        }, 
+# Determine which database engine to use
+if os.environ.get('DB_ENGINE') == "mysql":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'dashboard_db'),
+            'USER': os.getenv('DB_USERNAME', 'root'),
+            'PASSWORD': os.getenv('DB_PASS', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', 3306),
+        }
+    }
+elif os.environ.get('DB_ENGINE') == "postgres":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'postgres'),
+            'USER': os.getenv('DB_USERNAME', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASS', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', 5432),
+        }
     }
 else:
-
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

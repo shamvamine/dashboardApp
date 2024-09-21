@@ -110,7 +110,7 @@
               {% else %}
                   <span style="color: gray;">
                       &#8212; <!-- Dash for no change -->
-                      {{ deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta }}
+                      {% comment %} {{ deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta }} {% endcomment %}
                       
                   </span>
                   <!-- - ({{ percentages_remaining.rom|floatformat:1 }}%) -->
