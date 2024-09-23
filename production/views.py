@@ -824,6 +824,40 @@ def addScatsTails(request):
     }
     return render(request, 'production/addScatsTails.html', context)
 
+# getting data for the cil-scats-grg graph
+def cilScatsGrg_current_month():
+    # Get the current month and year
+    current_date = timezone.now()
+    current_month = current_date.month
+    current_year = current_date.year
+
+    # Filter gold_estimate objects for the current month
+    estimates = gold_estimate.objects.filter(date__year=current_year, date__month=current_month)
+
+    if not estimates.exists():
+        # If no records exist for the current month, return None or an empty dataset
+        return {
+            'cil': [],
+            'scats': [],
+            'grg': [],
+            'dates': []
+        }
+
+   # Create float data points for each field (cil, scats, grg) and their respective dates
+    cil_values = [float(entry.cil) for entry in estimates]
+    scats_values = [float(entry.scats) for entry in estimates]
+    grg_values = [float(entry.grg) for entry in estimates]
+    dates = [entry.date.strftime("%d-%b-%Y") for entry in estimates]
+
+    # Return the data as a dictionary
+    data = {
+        'cil': cil_values,
+        'scats': scats_values,
+        'grg': grg_values,
+        'dates': dates
+    }
+    return data
+
 
 def gold_estimate_details(request):
     # Get the current date
@@ -854,6 +888,9 @@ def gold_estimate_details(request):
     forecast_gold = remaining_gold + total_gold
 
     
+    graph_data = cilScatsGrg_current_month()
+
+    chart_data_json             = json.dumps(graph_data)
 
     context = {
         'days_recorded': days_recorded,
@@ -862,13 +899,14 @@ def gold_estimate_details(request):
         'average_gold_per_day': round(average_gold_per_day,3),
         'remaining_gold': round(remaining_gold,3),
         'forecast_gold': round(forecast_gold,3),
+        'chartData': chart_data_json
         # 'dates': [date.strftime('%Y-%m-%d') for date in dates],  # Format dates as strings for JSON
         # 'daily_totals': daily_totals,
     }
 
     return render (request, 'production/gold_details.html', context)
 
-
+#Function to be used in the following view for variance calculations
 def calculate_variance(actual, budget):
     if budget is None or budget == 0:
         return None  # Handle division by zero
