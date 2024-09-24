@@ -18,6 +18,7 @@ urlpatterns = [
     path('update-data/<int:pk>', update_data, name='update-data'),
     path('scats-list', get_scats_tails, name='scats-list'),
     path('add-scats', addScatsTails, name='add-scats'),
+    path('update-scats/<int:pk>', updateScatsTails, name='update-scats'),
     # path('production-input', enter_production_data, name='production-input'),
     path('targets', target_data_list, name='targets' ),
     path('input-targets', target_data, name='input-targets'),

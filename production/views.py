@@ -847,6 +847,30 @@ def addScatsTails(request):
     }
     return render(request, 'production/addScatsTails.html', context)
 
+@login_required
+def updateScatsTails(request, pk):
+    data                            = get_object_or_404(gold_estimate, id=pk)
+    if request.method               == 'POST':
+        form = GoldEstimateForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('scats-list')
+    else:
+        form = GoldEstimateForm(instance=data)
+
+    context = {
+        'title'         : 'Update Scats & Tails Data',
+        'head'          : 'Update Scats & Tails Data',
+        'form'          : form,
+        'data_id'       : pk
+    }
+
+    return render(request, 'production/updateScatsTails.html', context)
+
+
+
 # getting data for the cil-scats-grg graph
 def cilScatsGrg_current_month():
     # Get the current month and year
