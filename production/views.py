@@ -1380,8 +1380,8 @@ def updateTrammingData(request, pk):
         form = TrammingForm(instance=data)
 
     context = {
-        'title'         : 'Update Safety Performance Data',
-        'head'          : 'Update Safety Performance Data',
+        'title'         : 'Update Tramming Data',
+        'head'          : 'Update Tramming Data',
         'form'          : form,
         'data_id'       : pk
     }
