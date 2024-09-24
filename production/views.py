@@ -728,6 +728,29 @@ def target_data_list(request):
     return render(request, 'production/targets.html', context)
 
 @login_required
+def updateTargetData(request, pk):
+    data                            = get_object_or_404(plan, id=pk)
+    if request.method               == 'POST':
+        form = PlanForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('targets')
+    else:
+        form = PlanForm(instance=data)
+
+    context = {
+        'title'         : 'Update Targets Data',
+        'head'          : 'Update Targets Data',
+        'form'          : form,
+        'data_id'       : pk
+    }
+
+    return render(request, 'production/updateTargets.html', context)
+
+
+@login_required
 def budget_data_list(request):
     budget_data = budget.objects.all()
     context = {

@@ -59,7 +59,7 @@
               <td class="align-middle text-center">{{ record.dev_drilling }}</td>
               <td class="align-middle text-center">{{ record.ore_gen }}</td>
               <td class="align-middle text-center">
-                <a href="" class="btn btn-primary">Update</a>
+                <a href="{% url 'update-targets' record.pk %}" class="btn btn-primary">Update</a>
               </td>
             </tr>
             {% endfor %}

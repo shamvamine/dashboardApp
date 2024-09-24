@@ -21,6 +21,7 @@ urlpatterns = [
     # path('production-input', enter_production_data, name='production-input'),
     path('targets', target_data_list, name='targets' ),
     path('input-targets', target_data, name='input-targets'),
+    path('update-targets/<int:pk>', updateTargetData, name='update-targets'),
     path('budgets-list', budget_data_list, name='budgets-list'),
     path('add-budget', add_budget_data, name='add-budget'),
     path('summaries-list', summaries_list, name='summaries-list'),
