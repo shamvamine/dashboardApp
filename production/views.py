@@ -235,66 +235,82 @@ def romValues():
 
 def get_plan_for_current_month():
     # Get the current month and year
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year   
+    current_date                = timezone.now()
+    current_month               = current_date.month
+    current_month_name          = calendar.month_name[current_month]
+    current_year                = current_date.year   
 
     # Query the budgets model for records matching the current month and year
-    budget_record = plan.objects.filter(date__month=current_month, date__year=current_year).first()
+    budget_record               = plan.objects.filter(date__month=current_month, date__year=current_year).first()
     
     if budget_record:
         # # If record exists for the current month, return the record
         # return budget_record.values()
         # Convert gold value from kilograms to ounces
         budget_record_dict = {
-            'date'          : budget_record.date,
-            'rom'           : budget_record.rom,
-            'milled_tonnes': budget_record.milled_tonnes,
-            'gold': round((budget_record.gold * 32.1507), 4), # Convert kg to oz
-            'grade': budget_record.grade,
-            'dev_drilling': budget_record.dev_drilling,
-            'ore_gen': budget_record.ore_gen,
-            'month_name': current_month_name,
-        }
-        return budget_record_dict
-
-def get_budget_for_current_month():
-    # Get the current month and year
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year   
-
-    # Query the budgets model for records matching the current month and year
-    budget_record = budget.objects.filter(date__month=current_month, date__year=current_year).first()
-    
-    if budget_record:
-        # # If record exists for the current month, return the record
-        # return budget_record.values()
-        # Convert gold value from kilograms to ounces
-        budget_record_dict = {
-            'date': budget_record.date,
-            'rom': budget_record.rom,
-            'milled_tonnes': budget_record.milled_tonnes,
-            'gold': round((budget_record.gold * 32.1507), 4), # Convert kg to oz
-            'grade': budget_record.grade,
-            'dev_drilling': budget_record.dev_drilling,
-            'ore_gen': budget_record.ore_gen,
-            'month_name': current_month_name,
+            'date'              : budget_record.date,
+            'rom'               : budget_record.rom,
+            'milled_tonnes'     : budget_record.milled_tonnes,
+            'gold'              : round((budget_record.gold * 32.1507), 4), # Convert kg to oz
+            'grade'             : budget_record.grade,
+            'dev_drilling'      : budget_record.dev_drilling,
+            'ore_gen'           : budget_record.ore_gen,
+            'recovery'          : budget_record.recovery,
+            'month_name'        : current_month_name,
         }
         return budget_record_dict
     else:
         # If no record exists, return a default record with all values set to 0
         return {
-            'date': current_date,
-            'rom': 0,
-            'milled_tonnes': 0,
-            'gold': 0,
-            'grade': 0,
-            'dev_drilling': 0,
-            'ore_gen': 0,
-            'month_name': current_month_name,
+            'date'              : current_date,
+            'rom'               : 0,
+            'milled_tonnes'     : 0,
+            'gold'              : 0,
+            'grade'             : 0,
+            'dev_drilling'      : 0,
+            'ore_gen'           : 0,
+            'recovery'          : 0,
+            'month_name'        : current_month_name,
+        }
+
+def get_budget_for_current_month():
+    # Get the current month and year
+    current_date                = timezone.now()
+    current_month               = current_date.month
+    current_month_name          = calendar.month_name[current_month]
+    current_year                = current_date.year   
+
+    # Query the budgets model for records matching the current month and year
+    budget_record               = budget.objects.filter(date__month=current_month, date__year=current_year).first()
+    
+    if budget_record:
+        # # If record exists for the current month, return the record
+        # return budget_record.values()
+        # Convert gold value from kilograms to ounces
+        budget_record_dict = {
+            'date'              : budget_record.date,
+            'rom'               : budget_record.rom,
+            'milled_tonnes'     : budget_record.milled_tonnes,
+            'gold'              : round((budget_record.gold * 32.1507), 4), # Convert kg to oz
+            'grade'             : budget_record.grade,
+            'dev_drilling'      : budget_record.dev_drilling,
+            'ore_gen'           : budget_record.ore_gen,
+            'recovery'          : budget_record.recovery,
+            'month_name'        : current_month_name,
+        }
+        return budget_record_dict
+    else:
+        # If no record exists, return a default record with all values set to 0
+        return {
+            'date'              : current_date,
+            'rom'               : 0,
+            'milled_tonnes'     : 0,
+            'gold'              : 0,
+            'grade'             : 0,
+            'dev_drilling'      : 0,
+            'ore_gen'           : 0,
+            'recovery'          : 0,
+            'month_name'        : current_month_name,
         }
 
 def get_mtd_deltas():
@@ -371,14 +387,14 @@ def get_daily_deltas():
         return None
 
     # Get the record for the day before the latest record
-    prev_record = Data.objects.filter(date__lt=current_record.date).order_by('-date').first()
+    prev_record                     = Data.objects.filter(date__lt=current_record.date).order_by('-date').first()
 
     if not prev_record:
         # Handle the case when there is no previous record (e.g., only one record exists)
         return None
     
     # Find the latest non-zero gold record
-    latest_non_zero_gold_record = Data.objects.filter(gold__gt=0).order_by('-date').first()
+    latest_non_zero_gold_record     = Data.objects.filter(gold__gt=0).order_by('-date').first()
 
     # Initialize gold_delta in case we can't calculate it
     gold_delta = None
@@ -389,20 +405,20 @@ def get_daily_deltas():
 
         if previous_non_zero_gold_record:
             # Calculate gold delta between the latest and previous non-zero values
-            gold_delta = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
+            gold_delta          = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
         else:
             # If only one non-zero value exists, use that for the month (no delta comparison)
-            gold_delta = round(latest_non_zero_gold_record.gold, 4)
+            gold_delta          = round(latest_non_zero_gold_record.gold, 4)
 
     # Calculate the deltas between the last recorded day and the previous day
     deltas = {
-        'ug_tonnes_delta': round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
-        'op_tonnes_delta': round(current_record.op_tonnes - prev_record.op_tonnes, 4),
-        'milled_tonnes_delta': round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
-        'dev_drilling_delta': round(current_record.dev_drilling - prev_record.dev_drilling, 4),
-        'ore_gen_delta': round(current_record.ore_gen - prev_record.ore_gen, 4),
-        'gold_delta': gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
-        'grade_delta': current_record.reconciled_grade - prev_record.reconciled_grade,
+        'ug_tonnes_delta'       : round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
+        'op_tonnes_delta'       : round(current_record.op_tonnes - prev_record.op_tonnes, 4),
+        'milled_tonnes_delta'   : round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
+        'dev_drilling_delta'    : round(current_record.dev_drilling - prev_record.dev_drilling, 4),
+        'ore_gen_delta'         : round(current_record.ore_gen - prev_record.ore_gen, 4),
+        'gold_delta'            : gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
+        'grade_delta'           : current_record.reconciled_grade - prev_record.reconciled_grade,
     }
 
     print('curr', current_record.grade, 'prev', prev_record.grade)
@@ -411,54 +427,55 @@ def get_daily_deltas():
 
 
 def getData(request):
-    current_date            = timezone.now()
-    current_month           = current_date.month
-    current_month_name      = calendar.month_name[current_month]
-    current_year            = current_date.year  
+    current_date                = timezone.now()
+    current_month               = current_date.month
+    current_month_name          = calendar.month_name[current_month]
+    current_year                = current_date.year  
 
-    delta_values = get_daily_deltas()
+    delta_values                = get_daily_deltas()
     
 
-    prod_data               = Data.objects.all().order_by('-date').first()
+    prod_data                   = Data.objects.all().order_by('-date').first()
     # Check if prod_data is not None
     if prod_data:
         # Convert gold value from kg to oz
-        gold_oz = float(prod_data.gold) * 32.1507
+        gold_oz                 = float(prod_data.gold) * 32.1507
 
         # Update the prod_data object with the gold value in ounces
-        prod_data.gold = round(gold_oz,3)
+        prod_data.gold          = round(gold_oz,3)
         
    
-    Plan                    = get_plan_for_current_month()
-    Budget                  = get_budget_for_current_month()
+    Plan                        = get_plan_for_current_month()
 
-    PerSummary              = getSafetyData()            # safety performance data summary 
+    Budget                      = get_budget_for_current_month()
 
-    mtd_data                = getMTDs()                  # Month to date values
+    PerSummary                  = getSafetyData()            # safety performance data summary 
+
+    mtd_data                    = getMTDs()                  # Month to date values
 
 
     # Fetch data from the Production_Data model
-    production_data         = Data.objects.all().order_by('date')
+    production_data             = Data.objects.all().order_by('date')
 
     # Extracting data for the chart
     # Filter the production data for dates in the current month
-    current_month_data       = [data.date.strftime('%b %d') for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    current_month_data          = [data.date.strftime('%b %d') for data in production_data if data.date.month == current_month and data.date.year == current_year]
    
-    dates                    = [data.date.strftime('%b %d') for data in production_data]
+    dates                       = [data.date.strftime('%b %d') for data in production_data]
     
-    milled_tonnage           = [data.milled_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
-    ug_tonnage               = [data.ug_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
-    op_tonnage               = [data.op_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
-    stock_pile               = [data.stock_pile for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    milled_tonnage              = [data.milled_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    ug_tonnage                  = [data.ug_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    op_tonnage                  = [data.op_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    stock_pile                  = [data.stock_pile for data in production_data if data.date.month == current_month and data.date.year == current_year]
 
     # Calculate ROM tonnage (ug_tonnes + op_tonnes)
-    rom = [ug + op for ug, op in zip(ug_tonnage, op_tonnage)]
+    rom                         = [ug + op for ug, op in zip(ug_tonnage, op_tonnage)]
 
-    rom_chart_data = romValues()
+    rom_chart_data              = romValues()
 
     # print(rom_chart_data)
 
-    cost_data                    = fin_costs.objects.all().order_by('-date').first()
+    cost_data                   = fin_costs.objects.all().order_by('-date').first()
 
     chart_data = {
         
@@ -473,21 +490,21 @@ def getData(request):
     
 
     # Get the current date
-    current_date = timezone.now().date()
+    current_date                = timezone.now().date()
 
     # Get the latest record where lti is greater than 0
-    last_lti_record = SafetyPerformance.objects.filter(lti__gt=0).order_by('-date').first()
+    last_lti_record             = SafetyPerformance.objects.filter(lti__gt=0).order_by('-date').first()
 
     # Check if there is a record with an lti
     if last_lti_record:
         # Calculate the difference in days between the current date and the date of the last lti
-        days_since_last_lti = (current_date - last_lti_record.date).days
+        days_since_last_lti     = (current_date - last_lti_record.date).days
     else:
         # If no record exists, return None or a default value
-        days_since_last_lti = 0
+        days_since_last_lti     = 0
 
     
-    bar_chart_data_json = newGradeData()
+    bar_chart_data_json         = newGradeData()
     # print(bar_chart_data_json,'some json stuff too')
     # bar_chart_data_json = json.dumps(newGradeData())
 
@@ -497,11 +514,13 @@ def getData(request):
         return 0
     
     percentages_remaining = {
-        'rom': calculate_percentage(Plan['rom'] if Plan else 0, mtd_data['rom'] if mtd_data else 0),
-        'milled_tonnes': calculate_percentage(Plan['milled_tonnes'] if Plan else 0, mtd_data['milled_tonnes'] if mtd_data else 0),
-        'ore_gen': calculate_percentage(Plan['ore_gen'] if Plan else 0, mtd_data['ore_gen'] if mtd_data else 0),
-        'gold': calculate_percentage(Plan['gold'] if Plan else 0, mtd_data['gold'] if mtd_data else 0),
+        'rom'                   : calculate_percentage(Plan['rom'] if Plan else 0, mtd_data['rom'] if mtd_data else 0),
+        'milled_tonnes'         : calculate_percentage(Plan['milled_tonnes'] if Plan else 0, mtd_data['milled_tonnes'] if mtd_data else 0),
+        'ore_gen'               : calculate_percentage(Plan['ore_gen'] if Plan else 0, mtd_data['ore_gen'] if mtd_data else 0),
+        'gold'                  : calculate_percentage(Plan['gold'] if Plan else 0, mtd_data['gold'] if mtd_data else 0),
     }
+
+    print('Planned Recovery: ', plan.recovery)
 
     context = {
 
@@ -525,36 +544,36 @@ def getData(request):
 
 
 def get_costs_dash(request):
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year  
+    current_date                = timezone.now()
+    current_month               = current_date.month
+    current_month_name          = calendar.month_name[current_month]
+    current_year                = current_date.year  
 
     # Filter data for the current month and year
-    spendings = dept_spending.objects.filter(date__month=current_month, date__year=current_year)
+    spendings                   = dept_spending.objects.filter(date__month=current_month, date__year=current_year)
 
     # Fetch budget data for the current month and year
-    budgets = fin_budgets.objects.filter(date__month=current_month, date__year=current_year)
-    budgets_dict = {budget.department.id: budget.total_c1_cost for budget in budgets}
+    budgets                     = fin_budgets.objects.filter(date__month=current_month, date__year=current_year)
+    budgets_dict                = {budget.department.id: budget.total_c1_cost for budget in budgets}
 
     # Fetch plan data for the current month and year
-    plans = dept_spending_plan.objects.filter(date__month=current_month, date__year=current_year)
-    plans_dict = {plan.department.id: plan.total_c1_cost for plan in plans}
+    plans                       = dept_spending_plan.objects.filter(date__month=current_month, date__year=current_year)
+    plans_dict                  = {plan.department.id: plan.total_c1_cost for plan in plans}
 
     # Aggregate data by department
-    departments = []
-    actual_spends = []
-    planned_spends = []
-    labels = []
+    departments                 = []
+    actual_spends               = []
+    planned_spends              = []
+    labels                      = []
 
     for spending in spendings:
-        dept_id = spending.department.id
-        dept_data = {
-            'name': spending.department.name,
-            'total_c1_cost': spending.total_c1_cost,
-            'budget': budgets_dict.get(dept_id, 0),
-            'plan': plans_dict.get(dept_id, 0),
-            'actual': spending.total_c1_cost
+        dept_id                 = spending.department.id
+        dept_data               = {
+            'name'              : spending.department.name,
+            'total_c1_cost'     : spending.total_c1_cost,
+            'budget'            : budgets_dict.get(dept_id, 0),
+            'plan'              : plans_dict.get(dept_id, 0),
+            'actual'            : spending.total_c1_cost
         }
         departments.append(dept_data)
         labels.append(spending.department.name)
