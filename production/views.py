@@ -926,9 +926,11 @@ def updateScatsTails(request, pk):
 # getting data for the cil-scats-grg graph
 def cilScatsGrg_current_month():
     # Get the current month and year
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_year = current_date.year
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_year = current_date.year
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Filter gold_estimate objects for the current month
     estimates = gold_estimate.objects.filter(date__year=current_year, date__month=current_month)
