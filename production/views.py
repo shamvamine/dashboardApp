@@ -22,14 +22,39 @@ def kg_to_oz(value):
     return round(ounces, 3)
 
 
+def get_latest_data_month_year():
+    """
+    Fetch the latest date from the Data model.
+    If no data exists, return the current month and year.
+    """
+    latest_data = Data.objects.order_by('-date').first()
+    
+    if latest_data:
+        # Use the date of the latest entry in Data model to determine the current month and year
+        latest_date = latest_data.date
+        current_month = latest_date.month
+        current_year = latest_date.year
+        current_month_name = calendar.month_name[current_month]
+    else:
+        # If no entries exist, use the current date as fallback
+        current_date = timezone.now()
+        current_month = current_date.month
+        current_year = current_date.year
+        current_month_name = calendar.month_name[current_month]
+    
+    return current_month, current_year, current_month_name
+
+
+
 # Create your views here.
 
 def getSafetyData():                                                        #safety perfomance data view - get all data related to the safety performance model for display
     # Get the current month and year
     current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year   
+    # current_month = current_date.month
+    # current_month_name = calendar.month_name[current_month]
+    # current_year = current_date.year   
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     start_of_year = current_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
     data_ytd = SafetyPerformance.objects.filter(date__gte=start_of_year, date__lte=current_date)
@@ -61,10 +86,12 @@ def getSafetyData():                                                        #saf
 
 def getMTDs():
     # Get the current month and year
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year   
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_month_name = calendar.month_name[current_month]
+    # current_year = current_date.year 
+    # 
+    current_month, current_year, current_month_name = get_latest_data_month_year()  
 
     # Filter Summaries objects for the current month
     mtd_summaries = Data.objects.filter(date__month=current_month, date__year=current_year)
@@ -171,14 +198,14 @@ def getMTDs():
 
 def newGradeData():
     currentDate             = datetime.date.today()
-
+    current_month, current_year, current_month_name = get_latest_data_month_year()
     # Retrieve monthly planned grade
-    monthly_plan            = plan.objects.filter(date__year=currentDate.year, date__month=currentDate.month).first()
+    monthly_plan            = plan.objects.filter(date__year=current_year, date__month=current_month).first()
 
     # Retrieve daily grade data for the current month
-    daily_data              = Data.objects.filter(date__year=currentDate.year, date__month=currentDate.month).values_list('date', 'grade').order_by('date')
-    cil_data                = Data.objects.filter(date__year=currentDate.year, date__month=currentDate.month).values_list('date', 'cil_feed_grade').order_by('date')
-    rec_data                = Data.objects.filter(date__year=currentDate.year, date__month=currentDate.month).values_list('date', 'reconciled_grade').order_by('date')
+    daily_data              = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'grade').order_by('date')
+    cil_data                = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'cil_feed_grade').order_by('date')
+    rec_data                = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'reconciled_grade').order_by('date')
 
     # Prepare data for Chart.js format
     dates                   = [date.strftime('%b %d') for date, _ in daily_data]
@@ -207,9 +234,10 @@ def newGradeData():
 
 def romValues():
     currentDate             = datetime.date.today()
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
-    ug_data                 = Data.objects.filter(date__year=currentDate.year, date__month=currentDate.month).values_list('date', 'ug_tonnes').order_by('date')
-    op_data                 = Data.objects.filter(date__year=currentDate.year, date__month=currentDate.month).values_list('date', 'op_tonnes').order_by('date')
+    ug_data                 = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'ug_tonnes').order_by('date')
+    op_data                 = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'op_tonnes').order_by('date')
 
 
     
@@ -235,10 +263,12 @@ def romValues():
 
 def get_plan_for_current_month():
     # Get the current month and year
-    current_date                = timezone.now()
-    current_month               = current_date.month
-    current_month_name          = calendar.month_name[current_month]
-    current_year                = current_date.year   
+    # current_date                = timezone.now()
+    # current_month               = current_date.month
+    # current_month_name          = calendar.month_name[current_month]
+    # current_year                = current_date.year   
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Query the budgets model for records matching the current month and year
     budget_record               = plan.objects.filter(date__month=current_month, date__year=current_year).first()
@@ -262,7 +292,7 @@ def get_plan_for_current_month():
     else:
         # If no record exists, return a default record with all values set to 0
         return {
-            'date'              : current_date,
+            'date'              : timezone.now(),
             'rom'               : 0,
             'milled_tonnes'     : 0,
             'gold'              : 0,
@@ -275,10 +305,11 @@ def get_plan_for_current_month():
 
 def get_budget_for_current_month():
     # Get the current month and year
-    current_date                = timezone.now()
-    current_month               = current_date.month
-    current_month_name          = calendar.month_name[current_month]
-    current_year                = current_date.year   
+    # current_date                = timezone.now()
+    # current_month               = current_date.month
+    # current_month_name          = calendar.month_name[current_month]
+    # current_year                = current_date.year  
+    current_month, current_year, current_month_name = get_latest_data_month_year() 
 
     # Query the budgets model for records matching the current month and year
     budget_record               = budget.objects.filter(date__month=current_month, date__year=current_year).first()
@@ -302,7 +333,7 @@ def get_budget_for_current_month():
     else:
         # If no record exists, return a default record with all values set to 0
         return {
-            'date'              : current_date,
+            'date'              : timezone.now(),
             'rom'               : 0,
             'milled_tonnes'     : 0,
             'gold'              : 0,
@@ -427,10 +458,12 @@ def get_daily_deltas():
 
 
 def getData(request):
-    current_date                = timezone.now()
-    current_month               = current_date.month
-    current_month_name          = calendar.month_name[current_month]
-    current_year                = current_date.year  
+    # current_date                = timezone.now()
+    # current_month               = current_date.month
+    # current_month_name          = calendar.month_name[current_month]
+    # current_year                = current_date.year  
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     delta_values                = get_daily_deltas()
     
@@ -927,9 +960,11 @@ def cilScatsGrg_current_month():
 
 def gold_estimate_details(request):
     # Get the current date
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_year = current_date.year
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_year = current_date.year
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Filter records for the current month
     gold_records = gold_estimate.objects.filter(date__month=current_month, date__year=current_year)
@@ -981,10 +1016,12 @@ def calculate_variance(actual, budget):
 def costs_details(request):
 
     # Get the current date, month, and year
-    current_date = timezone.now()
-    current_month = current_date.month
-    current_month_name = calendar.month_name[current_month]
-    current_year = current_date.year
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_month_name = calendar.month_name[current_month]
+    # current_year = current_date.year
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Retrieve cost data for the current month
     cost_data = fin_costs.objects.filter(date__month=current_month, date__year=current_year)
@@ -1087,11 +1124,12 @@ def costs_details(request):
     return render(request, 'production/costs_details.html', context)
 
 def rom__details(request):
-    current_date            = timezone.now()
-    current_month           = current_date.month
-    current_month_name      = calendar.month_name[current_month]
-    current_year            = current_date.year  
+    # current_date            = timezone.now()
+    # current_month           = current_date.month
+    # current_month_name      = calendar.month_name[current_month]
+    # current_year            = current_date.year  
 
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     Plan                    = get_budget_for_current_month()
     rom_value               = Plan['rom']
@@ -1177,10 +1215,12 @@ def milling__details(request):
     return render(request, 'production/milling_details.html', context)
 
 def ore_gen_details(request):
-    current_date            = timezone.now()
-    current_month           = current_date.month
-    current_month_name      = calendar.month_name[current_month]
-    current_year            = current_date.year 
+    # current_date            = timezone.now()
+    # current_month           = current_date.month
+    # current_month_name      = calendar.month_name[current_month]
+    # current_year            = current_date.year 
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Retrieve cost data for the current month
     tramming_data           = trammings.objects.filter(date__month=current_month, date__year=current_year).order_by('date')
