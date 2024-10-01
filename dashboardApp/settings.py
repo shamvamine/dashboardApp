@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'production',
+    'django.contrib.humanize',
 
     'crispy_bootstrap5',
 
