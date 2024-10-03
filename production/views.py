@@ -972,11 +972,11 @@ def gold_estimate_details(request):
     gold_records = gold_estimate.objects.filter(date__month=current_month, date__year=current_year)
 
     # Number of days recorded in the month
-    days_recorded = gold_records.count() -2
+    days_recorded = gold_records.count()
 
     # Number of days remaining in the current month
     total_days_in_month = calendar.monthrange(current_year, current_month)[1]
-    days_remaining = (total_days_in_month - days_recorded) - 2
+    days_remaining = (total_days_in_month - days_recorded)
 
     
     total_gold = sum(record.total for record in gold_records)
