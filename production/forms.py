@@ -144,7 +144,7 @@ class TrammingForm(forms.ModelForm):
 class DataForm(forms.ModelForm):
     class Meta:
         model                       = Data
-        fields                      = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 'grade','cil_feed_grade', 'reconciled_grade', 'gold','recovery_perc', 'dowmtime']
+        fields                      = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 'grade','cil_feed_grade', 'reconciled_grade', 'gold','recovery_perc', 'dowmtime', 'stock_pile']
 
         widgets                     = {
             'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
@@ -159,6 +159,7 @@ class DataForm(forms.ModelForm):
             'gold'                  : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
             'recovery_perc'         : forms.TextInput(attrs={'typr': 'text', 'class':'form-control'}),
             'dowmtime'              : forms.TextInput(attrs={'type': 'text', 'placeholder':'Leave blank if None','class':'form-control'}),
+            'stock_pile'            : forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
 
         }
         labels = {
@@ -173,7 +174,8 @@ class DataForm(forms.ModelForm):
             'reconciled_grade'      : 'Reconciled Grade (g/t)',
             'gold'                  : 'Gold Produced (kg)',
             'recovery_perc'         : 'Recovery (%)',
-            'dowmtime'              : 'Downtime (hrs)'
+            'dowmtime'              : 'Downtime (hrs)',
+            'stock_pile'            : 'Stock Pile (t)'
         }
 
         def __init__(self, *args, **kwargs):

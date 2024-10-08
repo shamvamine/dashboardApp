@@ -16,27 +16,28 @@ class Data(models.Model):
     gold                        = models.DecimalField(max_digits=10, decimal_places=4)
     recovery_perc               = models.DecimalField(max_digits=10, decimal_places=2)
     dowmtime                    = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    stock_pile                  = models.FloatField()
 
     def __str__(self) -> str:
         return f'{self.ug_tonnes + self.op_tonnes}'
 
-    @cached_property
-    def stock_pile(self):
+    # @cached_property
+    # def stock_pile(self):
         
-        # Calculate the YTD trucking and milling
-        ytd_trucking = Data.objects.filter(date__lte=self.date).aggregate(
-            ytd_trucking=Sum('ug_tonnes') + Sum('op_tonnes')
-        )['ytd_trucking']
-        ytd_milling = Data.objects.filter(date__lte=self.date).aggregate(
-            ytd_milling=Sum('milled_tonnes')
-        )['ytd_milling']
+    #     # Calculate the YTD trucking and milling
+    #     ytd_trucking = Data.objects.filter(date__lte=self.date).aggregate(
+    #         ytd_trucking=Sum('ug_tonnes') + Sum('op_tonnes')
+    #     )['ytd_trucking']
+    #     ytd_milling = Data.objects.filter(date__lte=self.date).aggregate(
+    #         ytd_milling=Sum('milled_tonnes')
+    #     )['ytd_milling']
 
-        previous_stock_pile = ytd_trucking - ytd_milling if ytd_trucking and ytd_milling else 0
+    #     #previous_stock_pile = ytd_trucking - ytd_milling if ytd_trucking and ytd_milling else 0
+    #     previous_stock_pile = 2555
+    #     # Calculate current day's stockpile
+    #     current_day_stock = self.ug_tonnes + self.op_tonnes - self.milled_tonnes
 
-        # Calculate current day's stockpile
-        current_day_stock = self.ug_tonnes + self.op_tonnes - self.milled_tonnes
-
-        return previous_stock_pile + current_day_stock
+    #     return previous_stock_pile + current_day_stock
 
 class SafetyPerformance(models.Model):
     date                        = models.DateField(unique =True)

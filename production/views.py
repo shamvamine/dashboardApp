@@ -719,7 +719,7 @@ def input_data(request):
         form = DataForm()
 
     context = {
-        'title'                 : 'Input Data',
+        'title'                 :'Input Data',
         'head'                  :'Input Data',
         'form'                  : form
 
