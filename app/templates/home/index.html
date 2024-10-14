@@ -42,7 +42,7 @@
     {% comment %} <span>Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 1 219 296 Fatality Free Shifts as of 31 August 2024 ~ |~ Gold Recovery was at {{summary.recovery_perc}}% ~ | ~ ZESA Downtime - 36hrs as of week 1 September ~ | ~ DQS Recertification Audit Completed. 2 ISO Certificates Retained QMS Certificate & EMS Certificate ~ | ~ MY SAFETY MY RESPONSIBILITY. TOTAL ELIMINATION OF ACCIDENTS -  USARASE TEA !!!</span> {% endcomment %}
     <span>
       Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 
-      1 243 409 Fatality Free Shifts as of 30 September 2024 ~ | ~ Gold Recovery was at 
+      1 243 409 Fatality Free Shifts as of 30 September 2024 ~ | ~ Gold Recovery for {{summary.date}} was at 
       {% with summary.recovery_perc|floatformat:2 as actual_recovery %}
         {% with plan.recovery|floatformat:2 as planned_recovery %}
             {% if actual_recovery > planned_recovery %}
