@@ -1,0 +1,42 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+  <style type="text/css">
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header .btn {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<main>
+  <br>
+  <div class="card">
+    <div class="card-body">
+      <a href="{% url 'costs-list'%}" class="btn btn-primary">Go back</a>
+    </div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-lg border-0 rounded-lg mt-5">
+        <div class="card-header text-center">
+          <h3 class="text-center font-weight-light my-4">{{title}}</h3>
+          <span class="text-center">{{head}}</span>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %} {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
+        </div>
+        <div class="card-footer text-center">
+          <div class="small">NB: Make sure Values are always correct</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{%endblock content%}

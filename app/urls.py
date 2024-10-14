@@ -40,6 +40,7 @@ urlpatterns = [
     path('spending-list', get_dept_spending, name='spending-list'),
     path('costs-list', cost_list, name='costs-list'),
     path('add-cost', add_costs, name='add-cost'),
+    path('update-costs/<int:pk>', updateCost, name='update-costs'),
     path('cost-budget-list', cost_budgets_list, name='cost-budget-list'),
     path('add-cost-budget', add_cost_budget, name='add-cost-budget'),
     path('budgets-list', cost_budgets_list, name='budgets-list'),

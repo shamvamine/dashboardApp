@@ -1386,6 +1386,48 @@ def cost_list(request):
 
     return render (request, 'production/costs.html', context)
 
+@login_required
+def add_costs(request):
+    if request.method == 'POST':
+        form = FinCostsForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('costs-list')
+    else:
+        form = FinCostsForm()
+    
+    context = {
+        'title'             : 'Costs Data Input',
+        'head'              : 'Costs Data Input',
+        'form'              : form
+    }
+    return render(request, 'production/addCost.html', context)
+
+@login_required
+def updateCost(request,pk):
+    data                            = get_object_or_404(fin_costs, id=pk)
+    if request.method               == 'POST':
+        form = FinCostsForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('costs-list')
+    else:
+        form = FinCostsForm(instance=data)
+
+    context = {
+        'title'         : 'Update Costs Data',
+        'head'          : 'Update Costs Data',
+        'form'          : form,
+        'data_id'       : pk
+    }
+
+    return render(request, 'production/updateCosts.html', context)
+
 
 @login_required
 def goldPriceList(request):
@@ -1421,25 +1463,10 @@ def add_gold_price(request):
 
 
 
-@login_required
-def add_costs(request):
-    if request.method == 'POST':
-        form = FinCostsForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
 
-            return redirect('costs-list')
-    else:
-        form = FinCostsForm()
-    
-    context = {
-        'title'             : 'Costs Data Input',
-        'head'              : 'Costs Data Input',
-        'form'              : form
-    }
-    return render(request, 'production/addCost.html', context)
+
+
+
 
 @login_required
 def tramming_list(request):
