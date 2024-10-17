@@ -31,13 +31,15 @@
         data-bs-parent="#sidenavAccordion"
       >
         <nav class="sb-sidenav-menu-nested nav">
-          <a class="nav-link" href="{%url 'summaries-list'%}">Summaries</a>
-          <a class="nav-link" href="{%url 'sperformance-list'%}">Safety Performance</a>
-          <!-- <a class="nav-link" href="">Production Data</a> -->
-          <a class="nav-link" href="{%url 'targets'%}">Targets Data</a>
-          <a class="nav-link" href="{%url 'budgets-list'%}">Budgets Data</a>
-          <a class="nav-link" href="{%url 'tramming-list'%}">Tramming Data</a>
-          <a class="nav-link" href="{%url 'scats-list'%}">Scats & Tails</a>
+          {% if request.user.profile.role == 'manager'%}
+            <a class="nav-link" href="{%url 'summaries-list'%}">Summaries</a>
+            <a class="nav-link" href="{%url 'sperformance-list'%}">Safety Performance</a>
+            <!-- <a class="nav-link" href="">Production Data</a> -->
+            <a class="nav-link" href="{%url 'targets'%}">Targets Data</a>
+            <a class="nav-link" href="{%url 'budgets-list'%}">Budgets Data</a>
+            <a class="nav-link" href="{%url 'tramming-list'%}">Tramming Data</a>
+            <a class="nav-link" href="{%url 'scats-list'%}">Scats & Tails</a>
+          {% endif %}
         </nav>
       </div>
 
@@ -60,14 +62,15 @@
         data-bs-parent="#sidenavAccordion"
       >
         <nav class="sb-sidenav-menu-nested nav">
-          <a class="nav-link" href="{%url 'spending-list'%}">Department Spendings</a>
-          <a class="nav-link" href="{%url 'dept-spend-budget'%}">Department Spending Budgets</a>
-          <a class="nav-link" href="{%url 'dept-spend-plan'%}">Department Spending Plan</a>
-          <a class="nav-link" href="{%url 'costs-list'%}">Cost Centres</a>
-          <a class="nav-link" href="{%url 'costs-list'%}">Costs</a>
-          <a class="nav-link" href="{%url 'cost-budget-list'%}">Cost Budgets</a>
-          <a class="nav-link" href="{%url 'price-list'%}">Gold Price</a>
-          
+          {% if request.user.profile.role == 'cost' or request.user.profile.role == 'manager' %}
+            <a class="nav-link" href="{%url 'spending-list'%}">Department Spendings</a>
+            <a class="nav-link" href="{%url 'dept-spend-budget'%}">Department Spending Budgets</a>
+            <a class="nav-link" href="{%url 'dept-spend-plan'%}">Department Spending Plan</a>
+            <a class="nav-link" href="{%url 'costs-list'%}">Cost Centres</a>
+            <a class="nav-link" href="{%url 'costs-list'%}">Costs</a>
+            <a class="nav-link" href="{%url 'cost-budget-list'%}">Cost Budgets</a>
+            <a class="nav-link" href="{%url 'price-list'%}">Gold Price</a>
+          {% endif %}
         </nav>
       </div>
     </div>
