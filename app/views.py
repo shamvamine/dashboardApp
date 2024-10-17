@@ -70,4 +70,4 @@ def login_view(request):
 def logout(request):
 	auth.logout(request)
 	messages.success(request, 'Your are now logged out')
-	return redirect('login')
+	return redirect("/")

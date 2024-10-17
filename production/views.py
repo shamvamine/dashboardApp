@@ -14,6 +14,20 @@ from django.contrib.auth.decorators import login_required
 from django import template
 from datetime import date
 
+from django.core.exceptions import PermissionDenied
+
+def role_required(allowed_roles=[]):
+    def decorator(view_func):
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                user_profile = request.user.profile
+                if user_profile.role in allowed_roles:
+                    return view_func(request, *args, **kwargs)
+            raise PermissionDenied  # or redirect to a "no access" page
+        return _wrapped_view
+    return decorator
+
+
 register = template.Library()
 
 @register.filter
@@ -94,17 +108,20 @@ def getMTDs():
     current_month, current_year, current_month_name = get_latest_data_month_year()  
 
     # Filter Summaries objects for the current month
-    mtd_summaries = Data.objects.filter(date__month=current_month, date__year=current_year)
+    mtd_summaries                   = Data.objects.filter(date__month=current_month, date__year=current_year)
     
     if mtd_summaries.exists():
         # Calculate MTD values if data exists
-        ug_tonnes = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
-        op_tonnes = mtd_summaries.aggregate(Sum('op_tonnes'))['op_tonnes__sum'] or 0
-        milled_tonnes = mtd_summaries.aggregate(Sum('milled_tonnes'))['milled_tonnes__sum'] or 0
-        dev_drilling = mtd_summaries.aggregate(Sum('dev_drilling'))['dev_drilling__sum'] or 0
-        ore_gen = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
-        gold = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
-        grade = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
+        ug_tonnes                   = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
+        op_tonnes                   = mtd_summaries.aggregate(Sum('op_tonnes'))['op_tonnes__sum'] or 0
+        milled_tonnes               = mtd_summaries.aggregate(Sum('milled_tonnes'))['milled_tonnes__sum'] or 0
+        dev_drilling                = mtd_summaries.aggregate(Sum('dev_drilling'))['dev_drilling__sum'] or 0
+        ore_gen                     = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
+        gold                        = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
+        grade                       = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
+        downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0
+
+        
         
         # For reconciled grade, consider only non-zero values
         non_zero_reconciled_grades = mtd_summaries.filter(reconciled_grade__gt=0)
@@ -131,7 +148,8 @@ def getMTDs():
         'ore_gen': ore_gen,
         'gold': round((float(gold) * 32.1507), 3),
         'grade': float(grade),
-        'reconciled_grade': round(float(reconciled_grade), 3)
+        'reconciled_grade': round(float(reconciled_grade), 3),
+        'downtime': downtime,
     }
     
     return mtd_summary
@@ -500,6 +518,7 @@ def getData(request):
     ug_tonnage                  = [data.ug_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
     op_tonnage                  = [data.op_tonnes for data in production_data if data.date.month == current_month and data.date.year == current_year]
     stock_pile                  = [data.stock_pile for data in production_data if data.date.month == current_month and data.date.year == current_year]
+    #dowmtime                    = [data.dowmtime for data in production_data if data.date.month == current_month and data.date.year == current_year]
 
     # Calculate ROM tonnage (ug_tonnes + op_tonnes)
     rom                         = [ug + op for ug, op in zip(ug_tonnage, op_tonnage)]
@@ -576,70 +595,7 @@ def getData(request):
     return render(request, 'home/index.html', context)
 
 
-def get_costs_dash(request):
-    current_date                = timezone.now()
-    current_month               = current_date.month
-    current_month_name          = calendar.month_name[current_month]
-    current_year                = current_date.year  
 
-    # Filter data for the current month and year
-    spendings                   = dept_spending.objects.filter(date__month=current_month, date__year=current_year)
-
-    # Fetch budget data for the current month and year
-    budgets                     = fin_budgets.objects.filter(date__month=current_month, date__year=current_year)
-    budgets_dict                = {budget.department.id: budget.total_c1_cost for budget in budgets}
-
-    # Fetch plan data for the current month and year
-    plans                       = dept_spending_plan.objects.filter(date__month=current_month, date__year=current_year)
-    plans_dict                  = {plan.department.id: plan.total_c1_cost for plan in plans}
-
-    # Aggregate data by department
-    departments                 = []
-    actual_spends               = []
-    planned_spends              = []
-    labels                      = []
-
-    for spending in spendings:
-        dept_id                 = spending.department.id
-        dept_data               = {
-            'name'              : spending.department.name,
-            'total_c1_cost'     : spending.total_c1_cost,
-            'budget'            : budgets_dict.get(dept_id, 0),
-            'plan'              : plans_dict.get(dept_id, 0),
-            'actual'            : spending.total_c1_cost
-        }
-        departments.append(dept_data)
-        labels.append(spending.department.name)
-        actual_spends.append(float(spending.total_c1_cost))
-        planned_spends.append(float(plans_dict.get(dept_id, 0)))
-
-    if spendings:
-        bData = {
-            'labels': labels,
-            'spend': actual_spends,
-            'plan': planned_spends,
-        }
-    else:
-        bData = {
-            'labels': [],
-            'spend': [],
-            'plan': [],
-        }
-
-    barData = json.dumps(bData)
-
-    context = {
-        'title': 'Costs Dashboard',
-        'head': 'Spending Analysis for each department',
-        'current_month': current_month_name,
-        'departments': departments,
-        'labels': labels,
-        'actual_spends': actual_spends,
-        'planned_spends': planned_spends,
-        'barData': barData,
-    }
-
-    return render(request, 'home/costs_dashboard.html', context)
 
 @login_required
 def safetyPrformance(request):
@@ -832,188 +788,172 @@ def add_budget_data(request):
         'form'              : form
     }
     return render(request, 'production/addProductionBudget.html', context)
-##ad budgets information
 
 
-@login_required
-def cost_budgets_list(request):
-    data                    = fin_cost_budgets.objects.all()
+#----------Cost Data-----------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------
 
-    context                 = {
-        'title'             : 'Cost Budgets',
-        'head'              : 'Budgets',
-        'budgetsData'       : data
-    }
 
-    return render(request, 'production/costBudgets.html', context)
+def get_costs_dash(request):
+    current_date                = timezone.now()
+    current_month               = current_date.month
+    current_month_name          = calendar.month_name[current_month]
+    current_year                = current_date.year  
 
-@login_required
-def add_cost_budget(request):
-    if request.method == 'POST':
-        form = FinCostsBudgetsForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
+    # Filter data for the current month and year
+    spendings                   = dept_spending.objects.filter(date__month=current_month, date__year=current_year)
 
-            return redirect('cost-budget-list')
+    # Fetch budget data for the current month and year
+    budgets                     = fin_budgets.objects.filter(date__month=current_month, date__year=current_year)
+    budgets_dict                = {budget.department.id: budget.total_c1_cost for budget in budgets}
+
+    # Fetch plan data for the current month and year
+    plans                       = dept_spending_plan.objects.filter(date__month=current_month, date__year=current_year)
+    plans_dict                  = {plan.department.id: plan.total_c1_cost for plan in plans}
+
+    # Aggregate data by department
+    departments                 = []
+    actual_spends               = []
+    planned_spends              = []
+    labels                      = []
+
+    for spending in spendings:
+        dept_id                 = spending.department.id
+        dept_data               = {
+            'name'              : spending.department.name,
+            'total_c1_cost'     : spending.total_c1_cost,
+            'budget'            : budgets_dict.get(dept_id, 0),
+            'plan'              : plans_dict.get(dept_id, 0),
+            'actual'            : spending.total_c1_cost
+        }
+        departments.append(dept_data)
+        labels.append(spending.department.name)
+        actual_spends.append(float(spending.total_c1_cost))
+        planned_spends.append(float(plans_dict.get(dept_id, 0)))
+
+    if spendings:
+        bData = {
+            'labels': labels,
+            'spend': actual_spends,
+            'plan': planned_spends,
+        }
     else:
-        form = FinCostsBudgetsForm()
-    
-    context = {
-        'title'             :'Budget Data Input',
-        'head'              : 'Cost Budgets',
-        'form'              : form
-    }
-    return render(request, 'production/addCostBudgets.html', context)
-
-@login_required
-def get_scats_tails(request):
-    data                   = gold_estimate.objects.all()
-
-    context                = {
-        'title'            : 'CIL, Scats & GRG List',
-        'head'             : 'CIL, Scats & GRG',
-        'scatsData'        :  data
-
-    }
-    return render(request, 'production/scatsTailsList.html', context)
-
-@login_required
-def addScatsTails(request):
-    if request.method == 'POST':
-        form = GoldEstimateForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('scats-list')
-    else:
-        form = GoldEstimateForm()
-    
-    context = {
-        'title'                 : 'CIL, Scats & GRG',
-        'head'                  : 'Add CIL, Scats & GRG',
-        'form'                  : form
-    }
-    return render(request, 'production/addScatsTails.html', context)
-
-@login_required
-def updateScatsTails(request, pk):
-    data                            = get_object_or_404(gold_estimate, id=pk)
-    if request.method               == 'POST':
-        form = GoldEstimateForm(request.POST or None, instance=data)
-        if form.is_valid():
-            form.save()
-
-            messages.success(request, f'Data has been updated successfully. ')
-            return redirect('scats-list')
-    else:
-        form = GoldEstimateForm(instance=data)
-
-    context = {
-        'title'         : 'Update Scats & Tails Data',
-        'head'          : 'Update Scats & Tails Data',
-        'form'          : form,
-        'data_id'       : pk
-    }
-
-    return render(request, 'production/updateScatsTails.html', context)
-
-
-
-# getting data for the cil-scats-grg graph
-def cilScatsGrg_current_month():
-    # Get the current month and year
-    # current_date = timezone.now()
-    # current_month = current_date.month
-    # current_year = current_date.year
-
-    current_month, current_year, current_month_name = get_latest_data_month_year()
-
-    # Filter gold_estimate objects for the current month
-    estimates = gold_estimate.objects.filter(date__year=current_year, date__month=current_month)
-
-    if not estimates.exists():
-        # If no records exist for the current month, return None or an empty dataset
-        return {
-            'cil': [],
-            'scats': [],
-            'grg': [],
-            'dates': []
+        bData = {
+            'labels': [],
+            'spend': [],
+            'plan': [],
         }
 
-   # Create float data points for each field (cil, scats, grg) and their respective dates
-    cil_values = [float(entry.cil) for entry in estimates]
-    scats_values = [float(entry.scats) for entry in estimates]
-    grg_values = [float(entry.grg) for entry in estimates]
-    dates = [entry.date.strftime("%d-%b-%Y") for entry in estimates]
-
-    # Return the data as a dictionary
-    data = {
-        'cil': cil_values,
-        'scats': scats_values,
-        'grg': grg_values,
-        'dates': dates
-    }
-    return data
-
-
-def gold_estimate_details(request):
-    # Get the current date
-    # current_date = timezone.now()
-    # current_month = current_date.month
-    # current_year = current_date.year
-
-    current_month, current_year, current_month_name = get_latest_data_month_year()
-
-    # Filter records for the current month
-    gold_records = gold_estimate.objects.filter(date__month=current_month, date__year=current_year)
-
-    # Number of days recorded in the month
-    days_recorded = gold_records.count()
-
-    # Number of days remaining in the current month
-    total_days_in_month = calendar.monthrange(current_year, current_month)[1]
-    days_remaining = (total_days_in_month - days_recorded)
-
-    
-    total_gold = sum(record.total for record in gold_records)
-
-    # Average gold per day
-    average_gold_per_day = total_gold / days_recorded if days_recorded > 0 else 0
-
-    #get the gold forecast for the remaining days based on average gold per day
-    remaining_gold = average_gold_per_day * days_remaining if days_recorded > 0 else 0
-
-    #month end forcast
-    forecast_gold = remaining_gold + total_gold
-
-    
-    graph_data = cilScatsGrg_current_month()
-
-    chart_data_json             = json.dumps(graph_data)
+    barData = json.dumps(bData)
 
     context = {
-        'days_recorded': days_recorded,
-        'days_remaining': days_remaining,
-        'total_gold': round(total_gold,3),
-        'average_gold_per_day': round(average_gold_per_day,3),
-        'remaining_gold': round(remaining_gold,3),
-        'forecast_gold': round(forecast_gold,3),
-        'chartData': chart_data_json
-        # 'dates': [date.strftime('%Y-%m-%d') for date in dates],  # Format dates as strings for JSON
-        # 'daily_totals': daily_totals,
+        'title': 'Costs Dashboard',
+        'head': 'Spending Analysis for each department',
+        'current_month': current_month_name,
+        'departments': departments,
+        'labels': labels,
+        'actual_spends': actual_spends,
+        'planned_spends': planned_spends,
+        'barData': barData,
     }
 
-    return render (request, 'production/gold_details.html', context)
+    return render(request, 'home/costs_dashboard.html', context)
+
 
 #Function to be used in the following view for variance calculations
 def calculate_variance(actual, budget):
     if budget is None or budget == 0:
         return None  # Handle division by zero
     return round(((actual - budget) / budget) * 100, 2)
+
+@login_required
+def cost_list(request):
+
+    data                   = fin_costs.objects.all()
+
+    context                = {
+        'title'            : 'Costs List',
+        'head'             : 'Costs',
+        'CostsData'        :  data
+
+    }
+
+    return render (request, 'production/costs.html', context)
+
+@login_required
+def add_costs(request):
+    if request.method == 'POST':
+        form = FinCostsForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('costs-list')
+    else:
+        form = FinCostsForm()
+    
+    context = {
+        'title'             : 'Costs Data Input',
+        'head'              : 'Costs Data Input',
+        'form'              : form
+    }
+    return render(request, 'production/addCost.html', context)
+
+@login_required
+def updateCost(request,pk):
+    data                            = get_object_or_404(fin_costs, id=pk)
+    if request.method               == 'POST':
+        form = FinCostsForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('costs-list')
+    else:
+        form = FinCostsForm(instance=data)
+
+    context = {
+        'title'         : 'Update Costs Data',
+        'head'          : 'Update Costs Data',
+        'form'          : form,
+        'data_id'       : pk
+    }
+
+    return render(request, 'production/updateCosts.html', context)
+
+
+@login_required
+def goldPriceList(request):
+    data                    = GoldPrice.objects.all()
+    context                 = {
+        'title'             : 'Gold Price List',
+        'head'              : 'Gold Price',
+        'priceData'         : data
+    }
+
+    return render(request, 'production/goldPriceList.html', context)
+
+@login_required
+def add_gold_price(request):
+    if request.method == 'POST':
+        form = GoldPriceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('price-list')
+    else:
+        form = GoldPriceForm()
+    
+    context = {
+        'title'             : 'Gold Price Input',
+        'head'              : 'Gold Price Input',
+        'form'              : form
+    }
+    return render(request, 'production/addPrice.html', context)
+
 
 def costs_details(request):
 
@@ -1125,6 +1065,310 @@ def costs_details(request):
 
     return render(request, 'production/costs_details.html', context)
 
+
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def cost_budgets_list(request):
+    data                    = fin_cost_budgets.objects.all()
+
+    context                 = {
+        'title'             : 'Cost Budgets',
+        'head'              : 'Budgets',
+        'budgetsData'       : data
+    }
+
+    return render(request, 'production/costBudgets.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def add_cost_budget(request):
+    if request.method == 'POST':
+        form = FinCostsBudgetsForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('cost-budget-list')
+    else:
+        form = FinCostsBudgetsForm()
+    
+    context = {
+        'title'             :'Budget Data Input',
+        'head'              : 'Cost Budgets',
+        'form'              : form
+    }
+    return render(request, 'production/addCostBudgets.html', context)
+
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def get_dept_spend_budget(request):
+    data                    = fin_budgets.objects.all()
+
+    context                 = {
+        'title'             : 'Spending Budget',
+        'head'              : 'Monthly Spending Analysis',
+        'SpendingData'      : data
+
+
+    }
+
+    return render (request, 'production/deptSpendingBudgets.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def get_dept_spend_plan(request):
+    data                    = dept_spending_plan.objects.all()
+
+    context                 = {
+        'title'             : 'Spending Plan',
+        'head'              : 'Monthly Spending Analysis',
+        'SpendingData'      : data
+
+
+    }
+
+    return render (request, 'production/deptSpendingPlan.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def add_dept_spending_plan(request):
+    if request.method == 'POST':
+        form = DeptSpendingPlanForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('dept-spend-plan')
+    else:
+        form = DeptSpendingPlanForm()
+    
+    context = {
+        'title'                 : 'Department Spending Plan',
+        'head'                  : 'Add Spending Plan',
+        'form'                  : form
+    }
+    return render(request, 'production/addDeptSpendingPlan.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def add_dept_spending_budget(request):
+    if request.method == 'POST':
+        form = DeptSpendingBudgetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('dept-spend-budget')
+    else:
+        form = DeptSpendingBudgetForm()
+    
+    context = {
+        'title'                 : 'Department Spending Budgets',
+        'head'                  : 'Add Spending Budget',
+        'form'                  : form
+    }
+    return render(request, 'production/addDeptSpendingBudget.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def get_dept_spending(request):
+    data                    = dept_spending.objects.all()
+
+    context                 = {
+        'title'             : 'Monthly Spend',
+        'head'              : 'Monthly Spending Analysis',
+        'SpendingData'      : data
+
+
+    }
+
+    return render (request, 'production/deptSpendingList.html', context)
+
+@login_required
+@role_required(allowed_roles=['cost', 'manager'])
+def add_dept_spending(request):
+    if request.method == 'POST':
+        form = DeptSpendingForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('spending-list')
+    else:
+        form = DeptSpendingForm()
+    
+    context = {
+        'title'                 : 'Department Spending',
+        'head'                  : 'Add Spending',
+        'form'                  : form
+    }
+    return render(request, 'production/addDeptSpendingBudget.html', context)
+
+
+#--------------------------------------------- End of Costs Data -----------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+
+
+
+#---------------------------------------------- Gold Estimation Data -------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+@login_required
+@role_required(allowed_roles=['manager'])
+def get_scats_tails(request):
+    data                   = gold_estimate.objects.all().order_by('-date')
+
+    context                = {
+        'title'            : 'CIL, Scats & GRG List',
+        'head'             : 'CIL, Scats & GRG',
+        'scatsData'        :  data
+
+    }
+    return render(request, 'production/scatsTailsList.html', context)
+
+@login_required
+@role_required(allowed_roles=['manager'])
+def addScatsTails(request):
+    if request.method == 'POST':
+        form = GoldEstimateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New  record created succesfully.')
+            messages.success(request,message)
+
+            return redirect('scats-list')
+    else:
+        form = GoldEstimateForm()
+    
+    context = {
+        'title'                 : 'CIL, Scats & GRG',
+        'head'                  : 'Add CIL, Scats & GRG',
+        'form'                  : form
+    }
+    return render(request, 'production/addScatsTails.html', context)
+
+@login_required
+@role_required(allowed_roles=['manager'])
+def updateScatsTails(request, pk):
+    data                            = get_object_or_404(gold_estimate, id=pk)
+    if request.method               == 'POST':
+        form = GoldEstimateForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('scats-list')
+    else:
+        form = GoldEstimateForm(instance=data)
+
+    context = {
+        'title'         : 'Update Scats & Tails Data',
+        'head'          : 'Update Scats & Tails Data',
+        'form'          : form,
+        'data_id'       : pk
+    }
+
+    return render(request, 'production/updateScatsTails.html', context)
+
+
+
+# getting data for the cil-scats-grg graph
+def cilScatsGrg_current_month():
+    # Get the current month and year
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_year = current_date.year
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
+
+    # Filter gold_estimate objects for the current month
+    estimates = gold_estimate.objects.filter(date__year=current_year, date__month=current_month)
+
+    if not estimates.exists():
+        # If no records exist for the current month, return None or an empty dataset
+        return {
+            'cil': [],
+            'scats': [],
+            'grg': [],
+            'dates': []
+        }
+
+   # Create float data points for each field (cil, scats, grg) and their respective dates
+    cil_values = [float(entry.cil) for entry in estimates]
+    scats_values = [float(entry.scats) for entry in estimates]
+    grg_values = [float(entry.grg) for entry in estimates]
+    dates = [entry.date.strftime("%d-%b-%Y") for entry in estimates]
+
+    # Return the data as a dictionary
+    data = {
+        'cil': cil_values,
+        'scats': scats_values,
+        'grg': grg_values,
+        'dates': dates
+    }
+    return data
+
+
+def gold_estimate_details(request):
+    # Get the current date
+    # current_date = timezone.now()
+    # current_month = current_date.month
+    # current_year = current_date.year
+
+    current_month, current_year, current_month_name = get_latest_data_month_year()
+
+    # Filter records for the current month
+    gold_records = gold_estimate.objects.filter(date__month=current_month, date__year=current_year)
+
+    # Number of days recorded in the month
+    days_recorded = gold_records.count()
+
+    # Number of days remaining in the current month
+    total_days_in_month = calendar.monthrange(current_year, current_month)[1]
+    days_remaining = (total_days_in_month - days_recorded)
+
+    
+    total_gold = sum(record.total for record in gold_records)
+
+    # Average gold per day
+    average_gold_per_day = total_gold / days_recorded if days_recorded > 0 else 0
+
+    #get the gold forecast for the remaining days based on average gold per day
+    remaining_gold = average_gold_per_day * days_remaining if days_recorded > 0 else 0
+
+    #month end forcast
+    forecast_gold = remaining_gold + total_gold
+
+    
+    graph_data = cilScatsGrg_current_month()
+
+    chart_data_json             = json.dumps(graph_data)
+
+    context = {
+        'days_recorded': days_recorded,
+        'days_remaining': days_remaining,
+        'total_gold': round(total_gold,3),
+        'average_gold_per_day': round(average_gold_per_day,3),
+        'remaining_gold': round(remaining_gold,3),
+        'forecast_gold': round(forecast_gold,3),
+        'chartData': chart_data_json
+        # 'dates': [date.strftime('%Y-%m-%d') for date in dates],  # Format dates as strings for JSON
+        # 'daily_totals': daily_totals,
+    }
+
+    return render (request, 'production/gold_details.html', context)
+
+
+
+#---------------------------------------------- End of Gold Estimation Data ----------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------
+
+
 def rom__details(request):
     # current_date            = timezone.now()
     # current_month           = current_date.month
@@ -1216,6 +1460,11 @@ def milling__details(request):
 
     return render(request, 'production/milling_details.html', context)
 
+
+
+
+#--------------------------------------- Tramming Data ------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------
 def ore_gen_details(request):
     # current_date            = timezone.now()
     # current_month           = current_date.month
@@ -1269,206 +1518,8 @@ def ore_gen_details(request):
 
     return render(request, 'production/tramming_details.html', context)
 
-
 @login_required
-def get_dept_spend_budget(request):
-    data                    = fin_budgets.objects.all()
-
-    context                 = {
-        'title'             : 'Spending Budget',
-        'head'              : 'Monthly Spending Analysis',
-        'SpendingData'      : data
-
-
-    }
-
-    return render (request, 'production/deptSpendingBudgets.html', context)
-
-@login_required
-def get_dept_spend_plan(request):
-    data                    = dept_spending_plan.objects.all()
-
-    context                 = {
-        'title'             : 'Spending Plan',
-        'head'              : 'Monthly Spending Analysis',
-        'SpendingData'      : data
-
-
-    }
-
-    return render (request, 'production/deptSpendingPlan.html', context)
-
-@login_required
-def add_dept_spending_plan(request):
-    if request.method == 'POST':
-        form = DeptSpendingPlanForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('dept-spend-plan')
-    else:
-        form = DeptSpendingPlanForm()
-    
-    context = {
-        'title'                 : 'Department Spending Plan',
-        'head'                  : 'Add Spending Plan',
-        'form'                  : form
-    }
-    return render(request, 'production/addDeptSpendingPlan.html', context)
-
-@login_required
-def add_dept_spending_budget(request):
-    if request.method == 'POST':
-        form = DeptSpendingBudgetForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('dept-spend-budget')
-    else:
-        form = DeptSpendingBudgetForm()
-    
-    context = {
-        'title'                 : 'Department Spending Budgets',
-        'head'                  : 'Add Spending Budget',
-        'form'                  : form
-    }
-    return render(request, 'production/addDeptSpendingBudget.html', context)
-
-@login_required
-def get_dept_spending(request):
-    data                    = dept_spending.objects.all()
-
-    context                 = {
-        'title'             : 'Monthly Spend',
-        'head'              : 'Monthly Spending Analysis',
-        'SpendingData'      : data
-
-
-    }
-
-    return render (request, 'production/deptSpendingList.html', context)
-
-@login_required
-def add_dept_spending(request):
-    if request.method == 'POST':
-        form = DeptSpendingForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('spending-list')
-    else:
-        form = DeptSpendingForm()
-    
-    context = {
-        'title'                 : 'Department Spending',
-        'head'                  : 'Add Spending',
-        'form'                  : form
-    }
-    return render(request, 'production/addDeptSpendingBudget.html', context)
-
-@login_required
-def cost_list(request):
-
-    data                   = fin_costs.objects.all()
-
-    context                = {
-        'title'            : 'Costs List',
-        'head'             : 'Costs',
-        'CostsData'        :  data
-
-    }
-
-    return render (request, 'production/costs.html', context)
-
-@login_required
-def add_costs(request):
-    if request.method == 'POST':
-        form = FinCostsForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('costs-list')
-    else:
-        form = FinCostsForm()
-    
-    context = {
-        'title'             : 'Costs Data Input',
-        'head'              : 'Costs Data Input',
-        'form'              : form
-    }
-    return render(request, 'production/addCost.html', context)
-
-@login_required
-def updateCost(request,pk):
-    data                            = get_object_or_404(fin_costs, id=pk)
-    if request.method               == 'POST':
-        form = FinCostsForm(request.POST or None, instance=data)
-        if form.is_valid():
-            form.save()
-
-            messages.success(request, f'Data has been updated successfully. ')
-            return redirect('costs-list')
-    else:
-        form = FinCostsForm(instance=data)
-
-    context = {
-        'title'         : 'Update Costs Data',
-        'head'          : 'Update Costs Data',
-        'form'          : form,
-        'data_id'       : pk
-    }
-
-    return render(request, 'production/updateCosts.html', context)
-
-
-@login_required
-def goldPriceList(request):
-    data                    = GoldPrice.objects.all()
-    context                 = {
-        'title'             : 'Gold Price List',
-        'head'              : 'Gold Price',
-        'priceData'         : data
-    }
-
-    return render(request, 'production/goldPriceList.html', context)
-
-@login_required
-def add_gold_price(request):
-    if request.method == 'POST':
-        form = GoldPriceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New  record created succesfully.')
-            messages.success(request,message)
-
-            return redirect('price-list')
-    else:
-        form = GoldPriceForm()
-    
-    context = {
-        'title'             : 'Gold Price Input',
-        'head'              : 'Gold Price Input',
-        'form'              : form
-    }
-    return render(request, 'production/addPrice.html', context)
-
-
-
-
-
-
-
-
-
-@login_required
+@role_required(allowed_roles=['manager'])
 def tramming_list(request):
 
     data                   = trammings.objects.all().order_by('-date')
@@ -1482,6 +1533,7 @@ def tramming_list(request):
     return render (request, 'production/tramming.html', context)
 
 @login_required
+@role_required(allowed_roles=['manager'])
 def add_trammings(request):
     if request.method == 'POST':
         form = TrammingForm(request.POST)
@@ -1502,6 +1554,7 @@ def add_trammings(request):
     return render(request, 'production/addTramming.html', context)
 
 @login_required
+@role_required(allowed_roles=['manager'])
 def updateTrammingData(request, pk):
     data                            = get_object_or_404(trammings, id=pk)
     if request.method               == 'POST':
@@ -1522,3 +1575,6 @@ def updateTrammingData(request, pk):
     }
 
     return render(request, 'production/updateTramming.html', context)
+
+#---------------------------------------------- End of Tramming Data -------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
