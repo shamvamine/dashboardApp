@@ -37,12 +37,51 @@
         ><i class="fas fa-user fa-fw"></i
       ></a>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-        <li><a class="dropdown-item" href="#!">Settings</a></li>
+        <!-- Settings Dropdown -->
+        {% if user.is_authenticated and user.profile.role == 'manager' %}
+        <li class="dropdown-submenu">
+            <a class="dropdown-item dropdown-toggle" href="#">Settings</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'users-list' %}">Users</a></li>
+                <!-- Add other Settings submenu items here if needed -->
+            </ul>
+        </li>
+        {% endif %}
+    
         <li><a class="dropdown-item" href="#!">Activity Log</a></li>
         <li><hr class="dropdown-divider" /></li>
-        <li><a class="dropdown-item" href="{%url 'login'%}">Login</a></li>
-        <li><a class="dropdown-item" href="{%url 'logout'%}">Logout</a></li>
-      </ul>
+        {% if user.is_authenticated %}
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+            <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+    </ul>
     </li>
   </ul>
 </nav>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      // Handle dropdown submenu
+      document.querySelectorAll('.dropdown-submenu a.dropdown-toggle').forEach(function(element) {
+          element.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Close all submenus first
+              document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function(submenu) {
+                  submenu.classList.remove('show');
+              });
+
+              // Open the clicked submenu
+              let nextEl = this.nextElementSibling;
+              if (nextEl && !nextEl.classList.contains('show')) {
+                  nextEl.classList.add('show');
+              }
+          });
+      });
+  });
+</script>
+
+
