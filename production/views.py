@@ -16,6 +16,13 @@ from datetime import date
 
 from django.core.exceptions import PermissionDenied
 
+register = template.Library()
+
+@register.filter
+def kg_to_oz(value):
+    ounces = value * 32.1507
+    return round(ounces, 3)
+
 def role_required(allowed_roles=[]):
     def decorator(view_func):
         def _wrapped_view(request, *args, **kwargs):
@@ -28,12 +35,25 @@ def role_required(allowed_roles=[]):
     return decorator
 
 
-register = template.Library()
+#-------------------------- User Views ---------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------
+@login_required
+@role_required(allowed_roles=['manager'])
+def users_list(request):
+    users = User.objects.all()  # Get all users
 
-@register.filter
-def kg_to_oz(value):
-    ounces = value * 32.1507
-    return round(ounces, 3)
+
+    context = {
+        'title': 'User List',
+        'users': users,  # Pass users to the template
+    }
+    return render(request, 'auth/userslist.html', context)
+
+
+#-----------------------------End of User Views -----------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------
+
+
 
 
 def get_latest_data_month_year():

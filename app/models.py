@@ -8,7 +8,8 @@ class Profile(models.Model):
         ('manager', 'Manager'),
         ('staff', 'Staff'),
         ('cost', 'Cost'),
-        ('tsd', 'Tsd')
+        ('tsd', 'Tsd'),
+        ('eng', 'Eng')
 
 
     ]
