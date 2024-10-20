@@ -39,6 +39,15 @@ class Data(models.Model):
 
     #     return previous_stock_pile + current_day_stock
 
+class Engineering_Data(models.Model):
+    date                        = models.DateField(unique=True)
+    zesa_downtime               = models.FloatField()
+
+
+    def __str__(self) -> str:
+        return f'{self.zesa_downtime} on {self.date}'
+
+
 class SafetyPerformance(models.Model):
     date                        = models.DateField(unique =True)
     fatality                    = models.IntegerField()

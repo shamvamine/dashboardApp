@@ -81,13 +81,35 @@ class CostForm(forms.ModelForm):
             super().__init__(*args, **kwargs)
             self.fields['date'].input_formats = ['%Y-%m-%d']
 
+
+
+class EngineeringDataForm(forms.ModelForm):
+    class Meta:
+        model                       = Engineering_Data
+        fields                      = ['date', 'zesa_downtime']
+
+        widgets                     ={
+            'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
+            'zesa_downtime'         : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
+        }
+        labels                      = {
+            'date'                  : 'Date',
+            'zesa_downtime'         : 'Zesa Downtime (hrs)',
+        }
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['date'].input_formats = ['%Y-%m-%d']       
+        
+
+
+
 class GoldPriceForm(forms.ModelForm):
     class Meta:
         model                       = GoldPrice
         fields                      = ['date', 'price']
 
         widgets                     = {
-             'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
+            'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
             'price'                 : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
 
         }

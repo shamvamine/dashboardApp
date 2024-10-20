@@ -486,14 +486,46 @@ def getData(request):
     delta_values                = get_daily_deltas()
     
 
-    prod_data                   = Data.objects.all().order_by('-date').first()
+    current_date = timezone.now().date()
+    
+    # Step 1: Get production metrics (one day behind)
+    one_day_behind = current_date - timezone.timedelta(days=1)
+    Production_data = Data.objects.filter(date=one_day_behind).first()
+
+    if not Production_data:
+        # Handle case where no data exists for one day behind
+        Production_data = Data.objects.filter(date__lt=current_date).order_by('-date').first()
+
+    # Step 2: Get grade data (two days behind)
+    two_days_behind = current_date - timezone.timedelta(days=2)
+    grade_data = Data.objects.filter(date=two_days_behind).first()
+
+    if not grade_data:
+        # Handle case where no data exists for two days behind
+        grade_data = Data.objects.filter(date__lt=current_date).order_by('-date').first()
+
+
+    prod_data = {
+        'ug_tonnes': Production_data.ug_tonnes,
+        'op_tonnes': Production_data.op_tonnes,
+        'milled_tonnes': Production_data.milled_tonnes,
+        'gold': Production_data.gold,
+        'dev_drilling': Production_data.dev_drilling,
+        'ore_gen': Production_data.ore_gen,
+        'grade': Production_data.grade,  # Grade from two days behind
+        'recovery_perc': Production_data.recovery_perc,
+        'stock_pile': Production_data.stock_pile,
+        'date': Production_data.date
+    }
+
+    #prod_data                   = Data.objects.all().order_by('-date').first()
     # Check if prod_data is not None
     if prod_data:
         # Convert gold value from kg to oz
-        gold_oz                 = float(prod_data.gold) * 32.1507
+        gold_oz                 = float(Production_data.gold) * 32.1507
 
         # Update the prod_data object with the gold value in ounces
-        prod_data.gold          = round(gold_oz,3)
+        Production_data.gold          = round(gold_oz,3)
         
    
     Plan                        = get_plan_for_current_month()
