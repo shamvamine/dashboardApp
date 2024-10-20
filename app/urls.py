@@ -1,6 +1,7 @@
 from django.urls import path, re_path
 from .views import *
 from production.views import *
+from production.views import users_list
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -10,6 +11,7 @@ urlpatterns = [
     path('dash', getData, name='dash'),
     path('costs', get_costs_dash, name='costs'),
     path('login/', login_view, name="login"),
+    path('users', users_list, name='users-list'),
     path('create-user', create_user, name='create-user'),
     path('sperformance-list', safetyPrformance, name='sperformance-list'),
     path('add-sp', addSafetyPerfData, name='add-sp'), 
