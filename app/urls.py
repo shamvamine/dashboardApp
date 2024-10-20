@@ -51,6 +51,9 @@ urlpatterns = [
     path('tramming-list', tramming_list, name='tramming-list'),
     path('add-tramming', add_trammings, name='add-tramming'),
     path('update-tramming/<int:pk>', updateTrammingData, name='update-tramming'),
+    path('engineeringData-list', engineering_data , name='engineeringData-list'),
+    path('add-engineeringData',addEnginneringData , name='add-engineeringData'),
+    path('update-engineeringData/<int:pk>', updateEngineeringData, name='update-engineeringData'),
     path("logout/", logout, name="logout")
 
     # Matches any html file

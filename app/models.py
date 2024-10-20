@@ -9,7 +9,8 @@ class Profile(models.Model):
         ('staff', 'Staff'),
         ('cost', 'Cost'),
         ('tsd', 'Tsd'),
-        ('eng', 'Eng')
+        ('eng', 'Eng'),
+        ('sheq', 'SHEQ'),
 
 
     ]

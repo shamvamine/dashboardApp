@@ -1,0 +1,72 @@
+{%extends "layouts/base.html"%} {%block content%}
+<head>
+  <style type="text/css">
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header .btn {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<main>
+  
+  <div class="card mb-4">
+    <br />
+    <div class="card-header" style="justify-content: space-between">
+      <i class="fas fa-table me-1"></i>
+      {{title}}
+      <a
+        href="{%url 'add-engineeringData'%}"
+        class="btn btn-primary ml-auto"
+        style="margin-left: auto"
+        >Add Record</a
+      >
+    </div>
+    <div class="card-body">
+      <div class="table-responsive" style="margin-top: 10px">
+        <table
+          id="example"
+          class="table table-striped table-bordered"
+          style="width: 100%"
+        >
+          <thead class="bg-success text-white">
+            <tr>
+              <th scope="col" class="text-center">#</th>
+              <th scope="col" class="text-center">Date</th>
+              <th scope="col" class="text-center">Zesa Downtime</th>
+              {% comment %} <th scope="col" class="text-center">Lost Time Incident</th>
+              <th scope="col" class="text-center">Non Lost Time Incident</th> {% endcomment %}
+              <th scope="col" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in data %}
+            <tr>
+              <th class="align-middle text-center" scope="row">
+                {{ forloop.counter}}
+              </th>
+              <td class="align-middle text-center">{{ record.date }}</td>
+              <td class="align-middle text-center">{{ record.zesa_downtime }}</td>
+              {% comment %} <td class="align-middle text-center">{{ record.lti }}</td>
+              <td class="align-middle text-center">{{ record.nlti }}</td> {% endcomment %}
+              <td class="align-middle text-center">
+                <a
+                  href="{% url 'update-engineeringData' record.pk %}"
+                  class="btn btn-primary"
+                  >Update</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+{%endblock content%}

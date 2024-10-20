@@ -82,6 +82,12 @@ def get_latest_data_month_year():
 
 # Create your views here.
 
+
+
+
+#----------------------------- SHEQ Statistics -------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------
+
 def getSafetyData():                                                        #safety perfomance data view - get all data related to the safety performance model for display
     # Get the current month and year
     current_date = timezone.now()
@@ -118,6 +124,130 @@ def getSafetyData():                                                        #saf
     # print(mtd_summary)
     return mtd_summary
 
+@login_required
+def safetyPrformance(request):
+    list                        = SafetyPerformance.objects.all().order_by('-date')
+
+    context                     = {
+        'title'                 : 'Safety Performance',
+        'head'                  : 'Safety Performance',
+        'performanceList'       : list
+    }
+
+    return render (request, 'production/safetyPerformance.html', context)
+
+@login_required
+def addSafetyPerfData(request):
+    if request.method == 'POST':
+        form = SafertyPerformanceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New record created succesfully.')
+            messages.success(request,message)
+            return redirect('sperformance-list')
+    else:
+        form = SafertyPerformanceForm()
+
+    context = {
+        'title'                 : 'Safety Performance',
+        'head'                  :'Input Safety Performance Data',
+        'form'                  : form
+
+    }
+    return render(request, 'production/addSafetyPerformanceData.html', context)
+
+@login_required
+def updateSafetyData(request, pk):
+    data                            = get_object_or_404(SafetyPerformance, id=pk)
+    if request.method               == 'POST':
+        form = SafertyPerformanceForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('sperformance-list')
+    else:
+        form = SafertyPerformanceForm(instance=data)
+
+    context = {
+        'title'                 : 'Update Safety Performance Data',
+        'head'                  : 'Update Safety Performance Data',
+        'form'                  : form,
+        'data_id'               : pk
+    }
+
+    return render(request, 'production/updateSafetyPer.html', context)
+
+
+#---------------------------------------------- End of SHEQ Statistics --------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-------------------------------------------- Engineering Data ---------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------
+
+@login_required
+@role_required(allowed_roles=['manager', 'eng'])
+def engineering_data(request):
+    list                        = Engineering_Data.objects.all().order_by('-date')
+
+    context                     = {
+        'title'                 : 'Engineering Statistics',
+        'head'                  : 'Engineering Statistics',
+        'data'                  : list
+    }
+
+    return render (request, 'production/engineeringDataList.html', context)
+
+
+@login_required
+@role_required(allowed_roles=['manager', 'eng'])
+def addEnginneringData(request):
+    if request.method == 'POST':
+        form = EngineeringDataForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New record created succesfully.')
+            messages.success(request,message)
+            return redirect('engineeringData-list')
+    else:
+        form = EngineeringDataForm()
+
+    context = {
+        'title'                 : 'Engineering Statistics',
+        'head'                  : 'Input Engineering Data',
+        'form'                  : form
+
+    }
+    return render(request, 'production/addEngineeringData.html', context)
+
+
+@login_required
+def updateEngineeringData(request, pk):
+    data                            = get_object_or_404(Engineering_Data, id=pk)
+    if request.method               == 'POST':
+        form = EngineeringDataForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('engineeringData-list')
+    else:
+        form = EngineeringDataForm(instance=data)
+
+    context = {
+        'title'                 : 'Engineering Data',
+        'head'                  : 'Update Engineering Data',
+        'form'                  : form,
+        'data_id'               : pk
+    }
+
+    return render(request, 'production/updateEngineeringData.html', context)
+
+#------------------------------------------- End of Engineering Data --------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
+
 def getMTDs():
     # Get the current month and year
     # current_date = timezone.now()
@@ -129,7 +259,11 @@ def getMTDs():
 
     # Filter Summaries objects for the current month
     mtd_summaries                   = Data.objects.filter(date__month=current_month, date__year=current_year)
-    
+    zesa_downtime                   = Engineering_Data.objects.filter(date__month=current_month, date__year=current_year)
+
+    if zesa_downtime.exists():
+        downtime                    = zesa_downtime.aggregate(Sum('zesa_downtime'))['zesa_downtime__sum'] or 0
+
     if mtd_summaries.exists():
         # Calculate MTD values if data exists
         ug_tonnes                   = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
@@ -139,7 +273,7 @@ def getMTDs():
         ore_gen                     = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
         gold                        = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
         grade                       = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
-        downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0
+        #downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0
 
         
         
@@ -649,59 +783,7 @@ def getData(request):
 
 
 
-@login_required
-def safetyPrformance(request):
-    list                        = SafetyPerformance.objects.all().order_by('-date')
 
-    context                     = {
-        'title'                 : 'Safety Performance',
-        'head'                  : 'Safety Performance',
-        'performanceList'       : list
-    }
-
-    return render (request, 'production/safetyPerformance.html', context)
-
-@login_required
-def addSafetyPerfData(request):
-    if request.method == 'POST':
-        form = SafertyPerformanceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            message = ( f'New record created succesfully.')
-            messages.success(request,message)
-            return redirect('sperformance-list')
-    else:
-        form = SafertyPerformanceForm()
-
-    context = {
-        'title'                 : 'Safety Performance',
-        'head'                  :'Input Safety Performance Data',
-        'form'                  : form
-
-    }
-    return render(request, 'production/addSafetyPerformanceData.html', context)
-
-@login_required
-def updateSafetyData(request, pk):
-    data                            = get_object_or_404(SafetyPerformance, id=pk)
-    if request.method               == 'POST':
-        form = SafertyPerformanceForm(request.POST or None, instance=data)
-        if form.is_valid():
-            form.save()
-
-            messages.success(request, f'Data has been updated successfully. ')
-            return redirect('sperformance-list')
-    else:
-        form = SafertyPerformanceForm(instance=data)
-
-    context = {
-        'title'                 : 'Update Safety Performance Data',
-        'head'                  : 'Update Safety Performance Data',
-        'form'                  : form,
-        'data_id'               : pk
-    }
-
-    return render(request, 'production/updateSafetyPer.html', context)
 
 @login_required
 def summaries_list(request):
