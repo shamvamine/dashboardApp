@@ -13,8 +13,10 @@ from django.db import connection
 from django.contrib.auth.decorators import login_required
 from django import template
 from datetime import date
-
 from django.core.exceptions import PermissionDenied
+from itertools import accumulate
+
+
 
 register = template.Library()
 
@@ -77,10 +79,6 @@ def get_latest_data_month_year():
         current_month_name = calendar.month_name[current_month]
     
     return current_month, current_year, current_month_name
-
-
-
-# Create your views here.
 
 
 
@@ -249,12 +247,7 @@ def updateEngineeringData(request, pk):
 #----------------------------------------------------------------------------------------------------------------------------
 
 def getMTDs():
-    # Get the current month and year
-    # current_date = timezone.now()
-    # current_month = current_date.month
-    # current_month_name = calendar.month_name[current_month]
-    # current_year = current_date.year 
-    # 
+   
     current_month, current_year, current_month_name = get_latest_data_month_year()  
 
     # Filter Summaries objects for the current month
@@ -369,34 +362,43 @@ def getMTDs():
 #     return mtd_summary 
 
 def newGradeData():
-    currentDate             = datetime.date.today()
+    currentDate = datetime.date.today()
     current_month, current_year, current_month_name = get_latest_data_month_year()
+
     # Retrieve monthly planned grade
-    monthly_plan            = plan.objects.filter(date__year=current_year, date__month=current_month).first()
+    monthly_plan = plan.objects.filter(date__year=current_year, date__month=current_month).first()
 
     # Retrieve daily grade data for the current month
-    daily_data              = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'grade').order_by('date')
-    cil_data                = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'cil_feed_grade').order_by('date')
-    rec_data                = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'reconciled_grade').order_by('date')
+    daily_data = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'grade').order_by('date')
+    cil_data = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'cil_feed_grade').order_by('date')
+    rec_data = Data.objects.filter(date__year=current_year, date__month=current_month).values_list('date', 'reconciled_grade').order_by('date')
 
     # Prepare data for Chart.js format
-    dates                   = [date.strftime('%b %d') for date, _ in daily_data]
-    # dt                      = [date.strftime('%b %d') for date in daily_data if date.month == current_month and data.date.year == current_year]
-    daily_grades            = [float(grade) for _, grade in daily_data]
-    daily_cil               = [float(cil_feed_grade) for _, cil_feed_grade in cil_data]
-    daily_reconc            = [float(reconciled_grade) for _, reconciled_grade in rec_data]
-    monthly_plan_grade      = float(monthly_plan.grade) if monthly_plan else None
+    dates = [date.strftime('%b %d') for date, _ in daily_data]
+    
+    # Helper function to replace None with the last available value
+    def fill_missing_values(values):
+        return list(accumulate(values, lambda x, y: x if y is None else y))
 
+    # Convert grade data, handle missing values using the fill_missing_values helper
+    daily_grades = fill_missing_values([float(grade) if grade is not None else None for _, grade in daily_data])
+    daily_cil = fill_missing_values([float(cil_feed_grade) if cil_feed_grade is not None else None for _, cil_feed_grade in cil_data])
+    daily_reconc = fill_missing_values([float(reconciled_grade) if reconciled_grade is not None else None for _, reconciled_grade in rec_data])
+    
+    # Handle the monthly plan grade (apply the same value to all days in the month)
+    monthly_plan_grade = float(monthly_plan.grade) if monthly_plan else None
+    monthly_plan_grade_list = [monthly_plan_grade] * len(dates) if monthly_plan_grade else [None] * len(dates)
 
     # Create barChartData dictionary
     barChartData = {
-        'dates'             : dates,
-        'actual'            : daily_grades,
-        'cil'               : daily_cil,
-        'reconciled'        : daily_reconc,
-        'grade'             : [monthly_plan_grade] * len(dates) if monthly_plan_grade else [None] * len(dates)
+        'dates': dates,
+        'actual': daily_grades,
+        'cil': daily_cil,
+        'reconciled': daily_reconc,
+        'grade': monthly_plan_grade_list
     }
 
+    # return barChartData
     # Convert barChartData to JSON response
     chart_data_json         = json.dumps(barChartData)
 
@@ -581,23 +583,69 @@ def get_mtd_deltas():
 
     return deltas
 
+# def get_daily_deltas():
+#     # Get the latest date (last recorded date) from the table
+#     current_record = Data.objects.order_by('-date').first()
+
+#     if not current_record:
+#         # Handle the case when there are no records
+#         return None
+
+#     # Get the record for the day before the latest record
+#     prev_record                     = Data.objects.filter(date__lt=current_record.date).order_by('-date').first()
+
+#     if not prev_record:
+#         # Handle the case when there is no previous record (e.g., only one record exists)
+#         return None
+    
+#     # Find the latest non-zero gold record
+#     latest_non_zero_gold_record     = Data.objects.filter(gold__gt=0).order_by('-date').first()
+
+#     # Initialize gold_delta in case we can't calculate it
+#     gold_delta = None
+
+#     if latest_non_zero_gold_record:
+#         # Find the previous non-zero gold record
+#         previous_non_zero_gold_record = Data.objects.filter(gold__gt=0, date__lt=latest_non_zero_gold_record.date).order_by('-date').first()
+
+#         if previous_non_zero_gold_record:
+#             # Calculate gold delta between the latest and previous non-zero values
+#             gold_delta          = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
+#         else:
+#             # If only one non-zero value exists, use that for the month (no delta comparison)
+#             gold_delta          = round(latest_non_zero_gold_record.gold, 4)
+
+#     # Calculate the deltas between the last recorded day and the previous day
+#     deltas = {
+#         'ug_tonnes_delta'       : round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
+#         'op_tonnes_delta'       : round(current_record.op_tonnes - prev_record.op_tonnes, 4),
+#         'milled_tonnes_delta'   : round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
+#         'dev_drilling_delta'    : round(current_record.dev_drilling - prev_record.dev_drilling, 4),
+#         'ore_gen_delta'         : round(current_record.ore_gen - prev_record.ore_gen, 4),
+#         'gold_delta'            : gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
+#         'grade_delta'           : current_record.reconciled_grade - prev_record.reconciled_grade,
+#     }
+
+#     print('curr', current_record.grade, 'prev', prev_record.grade)
+
+#     return deltas
 def get_daily_deltas():
-    # Get the latest date (last recorded date) from the table
+    # Step 1: Get the latest production record (last recorded date)
     current_record = Data.objects.order_by('-date').first()
 
     if not current_record:
-        # Handle the case when there are no records
+        # Handle case when there are no records
         return None
 
-    # Get the record for the day before the latest record
-    prev_record                     = Data.objects.filter(date__lt=current_record.date).order_by('-date').first()
+    # Step 2: Get the production record for the previous day
+    prev_record = Data.objects.filter(date__lt=current_record.date).order_by('-date').first()
 
     if not prev_record:
-        # Handle the case when there is no previous record (e.g., only one record exists)
+        # Handle case when there is no previous record (e.g., only one record exists)
         return None
-    
-    # Find the latest non-zero gold record
-    latest_non_zero_gold_record     = Data.objects.filter(gold__gt=0).order_by('-date').first()
+
+    # Step 3: Get the latest non-zero gold record
+    latest_non_zero_gold_record = Data.objects.filter(gold__gt=0).order_by('-date').first()
 
     # Initialize gold_delta in case we can't calculate it
     gold_delta = None
@@ -608,26 +656,39 @@ def get_daily_deltas():
 
         if previous_non_zero_gold_record:
             # Calculate gold delta between the latest and previous non-zero values
-            gold_delta          = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
+            gold_delta = round(latest_non_zero_gold_record.gold - previous_non_zero_gold_record.gold, 4)
         else:
             # If only one non-zero value exists, use that for the month (no delta comparison)
-            gold_delta          = round(latest_non_zero_gold_record.gold, 4)
+            gold_delta = round(latest_non_zero_gold_record.gold, 4)
 
-    # Calculate the deltas between the last recorded day and the previous day
+    # Step 4: Handle the grade data (use records from two and three days ago)
+    two_days_behind = current_record.date - timezone.timedelta(days=1)
+    three_days_behind = current_record.date - timezone.timedelta(days=2)
+
+    # Get the grade data from two and three days behind
+    current_grade_record = Data.objects.filter(date=two_days_behind).first()
+    previous_grade_record = Data.objects.filter(date=three_days_behind).first()
+
+    if not current_grade_record or not previous_grade_record:
+        # If there is no grade data for these dates, set grade_delta to None
+        grade_delta = None
+    else:
+        # Calculate the grade delta based on the reconciled grades of two and three days ago
+
+        grade_delta = round(current_grade_record.reconciled_grade - previous_grade_record.reconciled_grade, 2)
+        print('Grade', current_grade_record.reconciled_grade, 'grade:', previous_grade_record.reconciled_grade)
+    # Step 5: Calculate the deltas between the last recorded day and the previous day for other metrics
     deltas = {
-        'ug_tonnes_delta'       : round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
-        'op_tonnes_delta'       : round(current_record.op_tonnes - prev_record.op_tonnes, 4),
-        'milled_tonnes_delta'   : round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
-        'dev_drilling_delta'    : round(current_record.dev_drilling - prev_record.dev_drilling, 4),
-        'ore_gen_delta'         : round(current_record.ore_gen - prev_record.ore_gen, 4),
-        'gold_delta'            : gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
-        'grade_delta'           : current_record.reconciled_grade - prev_record.reconciled_grade,
+        'ug_tonnes_delta': round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
+        'op_tonnes_delta': round(current_record.op_tonnes - prev_record.op_tonnes, 4),
+        'milled_tonnes_delta': round(current_record.milled_tonnes - prev_record.milled_tonnes, 4),
+        'dev_drilling_delta': round(current_record.dev_drilling - prev_record.dev_drilling, 4),
+        'ore_gen_delta': round(current_record.ore_gen - prev_record.ore_gen, 4),
+        'gold_delta': gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
+        'grade_delta': grade_delta,  # Use the grade delta from two and three days ago
     }
 
-    print('curr', current_record.grade, 'prev', prev_record.grade)
-
     return deltas
-
 
 def getData(request):
     # current_date                = timezone.now()

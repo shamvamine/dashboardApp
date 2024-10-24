@@ -10,7 +10,7 @@ class Data(models.Model):
     milled_tonnes               = models.FloatField()
     dev_drilling                = models.FloatField()
     ore_gen                     = models.FloatField()
-    grade                       = models.DecimalField(max_digits=10, decimal_places=2)
+    grade                       = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     cil_feed_grade              = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     reconciled_grade            = models.DecimalField(max_digits=10, decimal_places=2, null = True, blank=True)
     gold                        = models.DecimalField(max_digits=10, decimal_places=4)

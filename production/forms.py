@@ -24,19 +24,31 @@ class CustomUserCreationForm(UserCreationForm):
          }
 
 class ProfileForm(forms.ModelForm):
-    role = forms.ModelChoiceField(
-        queryset=Profile.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
+    role = forms.ChoiceField(
+        choices=Profile.ROLE_CHOICES,  # Use predefined role choices
+        widget=forms.Select(attrs={'class': 'form-control'}),  # Dropdown widget
         label='Role'
     )
 
     class Meta:
         model = Profile
         fields = ['role']
-        widgets                     = {
-            'role'                  : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
+
+
+# class ProfileForm(forms.ModelForm):
+#     role = forms.ModelChoiceField(
+#         queryset=Profile.objects.all(),
+#         widget=forms.Select(attrs={'class': 'form-control'}),
+#         label='Role'
+#     )
+
+#     class Meta:
+#         model = Profile
+#         fields = ['role']
+#         widgets                     = {
+#             'role'                  : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
           
-         }
+#          }
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -163,47 +175,95 @@ class TrammingForm(forms.ModelForm):
             super().__init__(*args, **kwargs)
             self.fields['date'].input_formats = ['%Y-%m-%d']
 
+# class DataForm(forms.ModelForm):
+#     class Meta:
+#         model                       = Data
+#         fields                      = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 'grade','cil_feed_grade', 'reconciled_grade', 'gold','recovery_perc', 'dowmtime', 'stock_pile']
+
+#         widgets                     = {
+#             'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
+#             'ug_tonnes'             : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
+#             'op_tonnes'             : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'milled_tonnes'         : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'dev_drilling'          : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'ore_gen'               : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'grade'                 : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'cil_feed_grade'        : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'reconciled_grade'      : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'gold'                  : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
+#             'recovery_perc'         : forms.TextInput(attrs={'typr': 'text', 'class':'form-control'}),
+#             'dowmtime'              : forms.TextInput(attrs={'type': 'text', 'placeholder':'Leave blank if None','class':'form-control'}),
+#             'stock_pile'            : forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+
+#         }
+#         labels = {
+#             'date'                  : 'Date',
+#             'ug_tonnes'             : 'Underground Trucked Tonnage (t)',
+#             'op_tonnes'             : 'Open Pit Trucked Tonnage (t)',
+#             'milled_tonnes'         : 'Milled Tonnes',            
+#             'dev_drilling'          : 'Development Drilling (meters)',
+#             'ore_gen'               : 'Ore Generation (t)',
+#             'grade'                 : 'Trucked Grade (g/t)',
+#             'cil_feed_grade'        : 'Carbon in Leach Grade (g/t)',
+#             'reconciled_grade'      : 'Reconciled Grade (g/t)',
+#             'gold'                  : 'Gold Produced (kg)',
+#             'recovery_perc'         : 'Recovery (%)',
+#             'dowmtime'              : 'Downtime (hrs)',
+#             'stock_pile'            : 'Stock Pile (t)'
+#         }
+
+#         def __init__(self, *args, **kwargs):
+#             super().__init__(*args, **kwargs)
+#             self.fields['date'].input_formats = ['%Y-%m-%d']
+
 class DataForm(forms.ModelForm):
     class Meta:
-        model                       = Data
-        fields                      = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 'grade','cil_feed_grade', 'reconciled_grade', 'gold','recovery_perc', 'dowmtime', 'stock_pile']
+        model = Data
+        fields = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 
+                  'grade', 'cil_feed_grade', 'reconciled_grade', 'gold', 'recovery_perc', 'dowmtime', 'stock_pile']
 
-        widgets                     = {
-            'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
-            'ug_tonnes'             : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
-            'op_tonnes'             : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'milled_tonnes'         : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'dev_drilling'          : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'ore_gen'               : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'grade'                 : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'cil_feed_grade'        : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'reconciled_grade'      : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'gold'                  : forms.TextInput(attrs={'type': 'text', 'class':'form-control'}),
-            'recovery_perc'         : forms.TextInput(attrs={'typr': 'text', 'class':'form-control'}),
-            'dowmtime'              : forms.TextInput(attrs={'type': 'text', 'placeholder':'Leave blank if None','class':'form-control'}),
-            'stock_pile'            : forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
-
+        widgets = {
+            'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class': 'form-control'}),
+            'ug_tonnes': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'op_tonnes': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'milled_tonnes': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'dev_drilling': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'ore_gen': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'grade': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'cil_feed_grade': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'reconciled_grade': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'gold': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'recovery_perc': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
+            'dowmtime': forms.TextInput(attrs={'type': 'text', 'placeholder': 'Leave blank if None', 'class': 'form-control'}),
+            'stock_pile': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
         }
+
         labels = {
-            'date'                  : 'Date',
-            'ug_tonnes'             : 'Underground Trucked Tonnage (t)',
-            'op_tonnes'             : 'Open Pit Trucked Tonnage (t)',
-            'milled_tonnes'         : 'Milled Tonnes',            
-            'dev_drilling'          : 'Development Drilling (meters)',
-            'ore_gen'               : 'Ore Generation (t)',
-            'grade'                 : 'Trucked Grade (g/t)',
-            'cil_feed_grade'        : 'Carbon in Leach Grade (g/t)',
-            'reconciled_grade'      : 'Reconciled Grade (g/t)',
-            'gold'                  : 'Gold Produced (kg)',
-            'recovery_perc'         : 'Recovery (%)',
-            'dowmtime'              : 'Downtime (hrs)',
-            'stock_pile'            : 'Stock Pile (t)'
+            'date': 'Date',
+            'ug_tonnes': 'Underground Trucked Tonnage (t)',
+            'op_tonnes': 'Open Pit Trucked Tonnage (t)',
+            'milled_tonnes': 'Milled Tonnes',
+            'dev_drilling': 'Development Drilling (meters)',
+            'ore_gen': 'Ore Generation (t)',
+            'grade': 'Trucked Grade (g/t)',
+            'cil_feed_grade': 'Carbon in Leach Grade (g/t)',
+            'reconciled_grade': 'Reconciled Grade (g/t)',
+            'gold': 'Gold Produced (kg)',
+            'recovery_perc': 'Recovery (%)',
+            'dowmtime': 'Downtime (hrs)',
+            'stock_pile': 'Stock Pile (t)'
         }
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.fields['date'].input_formats = ['%Y-%m-%d']
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%Y-%m-%d']
+        # Make grade-related fields optional
+        self.fields['grade'].required = False
+        self.fields['cil_feed_grade'].required = False
+        self.fields['reconciled_grade'].required = False
+        self.fields['recovery_perc'].required = False
+        self.fields['dowmtime'].required=False
+        self.fields['stock_pile'].required=False
 
 class FinCostsForm(forms.ModelForm):
     class Meta:
