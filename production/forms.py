@@ -220,7 +220,7 @@ class DataForm(forms.ModelForm):
     class Meta:
         model = Data
         fields = ['date', 'ug_tonnes', 'op_tonnes', 'milled_tonnes', 'dev_drilling', 'ore_gen', 
-                  'grade', 'cil_feed_grade', 'reconciled_grade', 'gold', 'recovery_perc', 'dowmtime', 'stock_pile']
+                  'grade', 'cil_feed_grade', 'reconciled_grade', 'gold', 'recovery_perc', 'stock_pile']
 
         widgets = {
             'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class': 'form-control'}),
@@ -234,7 +234,7 @@ class DataForm(forms.ModelForm):
             'reconciled_grade': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
             'gold': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
             'recovery_perc': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
-            'dowmtime': forms.TextInput(attrs={'type': 'text', 'placeholder': 'Leave blank if None', 'class': 'form-control'}),
+            #'dowmtime': forms.TextInput(attrs={'type': 'text', 'placeholder': 'Leave blank if None', 'class': 'form-control'}),
             'stock_pile': forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
         }
 
@@ -250,7 +250,7 @@ class DataForm(forms.ModelForm):
             'reconciled_grade': 'Reconciled Grade (g/t)',
             'gold': 'Gold Produced (kg)',
             'recovery_perc': 'Recovery (%)',
-            'dowmtime': 'Downtime (hrs)',
+            #'dowmtime': 'Downtime (hrs)',
             'stock_pile': 'Stock Pile (t)'
         }
 
@@ -262,7 +262,7 @@ class DataForm(forms.ModelForm):
         self.fields['cil_feed_grade'].required = False
         self.fields['reconciled_grade'].required = False
         self.fields['recovery_perc'].required = False
-        self.fields['dowmtime'].required=False
+        #self.fields['dowmtime'].required=False
         self.fields['stock_pile'].required=False
 
 class FinCostsForm(forms.ModelForm):

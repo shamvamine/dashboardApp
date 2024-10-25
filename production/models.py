@@ -15,7 +15,7 @@ class Data(models.Model):
     reconciled_grade            = models.DecimalField(max_digits=10, decimal_places=2, null = True, blank=True)
     gold                        = models.DecimalField(max_digits=10, decimal_places=4)
     recovery_perc               = models.DecimalField(max_digits=10, decimal_places=2)
-    dowmtime                    = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    #dowmtime                    = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock_pile                  = models.FloatField()
 
     def __str__(self) -> str:

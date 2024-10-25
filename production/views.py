@@ -266,9 +266,7 @@ def getMTDs():
         ore_gen                     = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
         gold                        = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
         grade                       = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
-        #downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0
-
-        
+        #downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0     
         
         # For reconciled grade, consider only non-zero values
         non_zero_reconciled_grades = mtd_summaries.filter(reconciled_grade__gt=0)
@@ -296,7 +294,7 @@ def getMTDs():
         'gold': round((float(gold) * 32.1507), 3),
         'grade': float(grade),
         'reconciled_grade': round(float(reconciled_grade), 3),
-        'downtime': downtime,
+        'downtime': round(downtime,2),
     }
     
     return mtd_summary
@@ -632,7 +630,7 @@ def get_mtd_deltas():
 def get_daily_deltas():
     # Step 1: Get the latest production record (last recorded date)
     current_record = Data.objects.order_by('-date').first()
-
+    
     if not current_record:
         # Handle case when there are no records
         return None
@@ -661,22 +659,27 @@ def get_daily_deltas():
             # If only one non-zero value exists, use that for the month (no delta comparison)
             gold_delta = round(latest_non_zero_gold_record.gold, 4)
 
-    # Step 4: Handle the grade data (use records from two and three days ago)
-    two_days_behind = current_record.date - timezone.timedelta(days=1)
-    three_days_behind = current_record.date - timezone.timedelta(days=2)
+    # Step 4: Handle the grade data (conditioned on the availability of grade data on the latest record)
+    current_date = current_record.date
+    day_before = current_date - timezone.timedelta(days=1)
+    two_days_behind = current_date - timezone.timedelta(days=2)
 
-    # Get the grade data from two and three days behind
-    current_grade_record = Data.objects.filter(date=two_days_behind).first()
-    previous_grade_record = Data.objects.filter(date=three_days_behind).first()
-
-    if not current_grade_record or not previous_grade_record:
-        # If there is no grade data for these dates, set grade_delta to None
-        grade_delta = None
+    # Check for grade data on the latest record (current_record)
+    if current_record.reconciled_grade is not None:
+        # Use current_record and the previous day's record for grade delta
+        current_grade_record = current_record
+        previous_grade_record = Data.objects.filter(date=day_before).first()
     else:
-        # Calculate the grade delta based on the reconciled grades of two and three days ago
+        # Use records from two and three days ago for grade delta
+        current_grade_record = Data.objects.filter(date=day_before).first()
+        previous_grade_record = Data.objects.filter(date=two_days_behind).first()
 
+    # Calculate the grade delta if both records are found
+    if current_grade_record and previous_grade_record and current_grade_record.reconciled_grade is not None and previous_grade_record.reconciled_grade is not None:
         grade_delta = round(current_grade_record.reconciled_grade - previous_grade_record.reconciled_grade, 2)
-        print('Grade', current_grade_record.reconciled_grade, 'grade:', previous_grade_record.reconciled_grade)
+    else:
+        grade_delta = None
+
     # Step 5: Calculate the deltas between the last recorded day and the previous day for other metrics
     deltas = {
         'ug_tonnes_delta': round(current_record.ug_tonnes - prev_record.ug_tonnes, 4),
@@ -685,7 +688,7 @@ def get_daily_deltas():
         'dev_drilling_delta': round(current_record.dev_drilling - prev_record.dev_drilling, 4),
         'ore_gen_delta': round(current_record.ore_gen - prev_record.ore_gen, 4),
         'gold_delta': gold_delta if gold_delta is not None else round(current_record.gold - prev_record.gold, 4),
-        'grade_delta': grade_delta,  # Use the grade delta from two and three days ago
+        'grade_delta': grade_delta,  # Use the grade delta with conditional fallback
     }
 
     return deltas
