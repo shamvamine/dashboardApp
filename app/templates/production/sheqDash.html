@@ -1,0 +1,191 @@
+{%extends "layouts/base.html"%}
+{%load humanize%}
+
+{%block stylesheets%}
+<style>
+    main {
+        font-family: Athelas, sans-serif;
+    }
+    .board-container {
+        width: 80%;
+        margin: 0 auto;
+        border: 2px solid black;
+        padding: 10px;
+        margin-top: 100px;
+    }
+    h2, h3 {
+        text-align: center;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-size: 1.1rem; /* Increased font size */
+    }
+    table, th, td {
+        border: 1px solid black;
+    }
+    th, td {
+        padding: 10px; /* Increased padding for better visibility */
+        text-align: center;
+    }
+    .key-learnings, .safety-slogan {
+        padding: 10px;
+        border: 1px solid black;
+        font-size: 1.1rem; /* Increased font size */
+    }
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 1.2rem; /* Increased font size */
+    }
+
+
+    .scrolling-text{
+        white-space: nowrap;
+        overflow: hidden;
+        box-sizing:border-box;
+        margin-top:40px;
+        margin-bottom: -25px;
+        font-family: 'Athelas', serif; /* Apply Athelas to all headings */
+        font-size: 2.5rem;
+    
+      }
+    
+      .scrolling-text span{
+        display: inline-block;
+        padding-left:50%;
+        animation: scrolling 50s linear infinite;
+        white-space: nowrap;
+        padding: 5px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        font-size: 35px;
+        font-weight: bold;
+    
+      }
+      @keyframes scrolling{
+        from{
+          transform: translateX(100%)
+        }
+        to{
+          transform: translateX(-100%)
+        }
+      }
+</style>
+{%endblock stylesheets%}
+
+{% block content %}
+
+<main>
+    <h1 class="mt-4">Safety, Health, Environmet & Quality Dashboard</h1>
+    
+    <div class="scrolling-text">
+        {% comment %} <span>Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 1 219 296 Fatality Free Shifts as of 31 August 2024 ~ |~ Gold Recovery was at {{summary.recovery_perc}}% ~ | ~ ZESA Downtime - 36hrs as of week 1 September ~ | ~ DQS Recertification Audit Completed. 2 ISO Certificates Retained QMS Certificate & EMS Certificate ~ | ~ MY SAFETY MY RESPONSIBILITY. TOTAL ELIMINATION OF ACCIDENTS -  USARASE TEA !!!</span> {% endcomment %}
+        <span>
+          SHEQ News Flashes: {{days_since_last_lti}} Days Without a Lost Time Incident; 
+          1 243 409 Fatality Free Shifts as of 30 September 2024 ~ | ~ Gold Recovery for {{summary.date}} was at 
+          {% with summary.recovery_perc|floatformat:2 as actual_recovery %}
+            {% with plan.recovery|floatformat:2 as planned_recovery %}
+                {% if actual_recovery > planned_recovery %}
+                    <span style="color: green;">
+                        &#9650; {{ actual_recovery }}% 
+                    </span>
+                {% elif actual_recovery < planned_recovery %}
+                    <span style="color: red;">
+                        &#9660; {{ actual_recovery }}% 
+                    </span>
+                {% else %}
+                    <span style="color: gray;">
+                        &#8212; {{ actual_recovery }}%
+                    </span>
+                {% endif %}
+            {% endwith %}
+          {% endwith %}
+          
+          ~ | ~ {{plan.month_name}} - ZESA Downtime - {{mtd.downtime}} Hrs ~ | ~ October is Breast Cancer Awareness Month ~ | ~ DQS Recertification Audit Completed. 
+          2 ISO Certificates Retained QMS Certificate & EMS Certificate ~ | ~ MY SAFETY MY RESPONSIBILITY. 
+          TOTAL ELIMINATION OF ACCIDENTS - USARASE TEA !!!
+        </span>
+      
+      </div>
+
+    <div class="board-container">
+        <h2>Safety Statistics Board</h2>
+    
+        <!-- Milestones Table -->
+        <table>
+            <tr>
+                <th colspan="2">Milestones (Lagging Indicators)</th>
+            </tr>
+            <tr>
+                <td>Fatality Free Shifts (as of the last month)</td>
+                <td>1,243,409</td>
+            </tr>
+            <tr>
+                <td>Days Without LTI</td>
+                <td>450</td>
+            </tr>
+            <tr>
+                <td>Days Without IOD</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>Days Without Any Adverse Incidents</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>LTIFR (as of the last month)</td>
+                <td>0.00</td>
+            </tr>
+        </table>
+    
+        <!-- Last Incident Table -->
+        <h3>Last Incident</h3>
+        <table>
+            
+            <tr>
+                <th>Department</th>
+                <th>Date</th>
+                <th>F</th>
+                <th>LTI</th>
+                <th>NLTI</th>
+                <th>PDI</th>
+                <th>RTA</th>
+                <th>OHI</th>
+                <th>ENV</th>
+            </tr>
+            <tr>
+                <td>Mining</td>
+                <td>17.10.24</td>
+                <td></td>
+                <td>X</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="9" style="text-align: left;">
+                    <strong>Details:</strong> A hand trammer missed his footing and slipped on dead ore accumulation along the main tracks at 16 level. Part of his left foot strayed onto the tracks and was run over by the rear left wheel of the cocopan.
+                </td>
+            </tr>
+        </table>
+    
+        <!-- Key Learnings -->
+        <div class="key-learnings">
+            <strong>Key Learnings:</strong> Maintain good housekeeping at all workplaces to avoid trips, slips, and falls.
+        </div>
+    
+        <!-- Safety Slogan -->
+        <div class="safety-slogan">
+            <strong>My Safety, My Responsibility, Total Elimination of Accidents</strong><br>
+            <span>Usarase T.E.A</span>
+        </div>
+    </div>
+    
+   
+
+</main>
+{% endblock content %}
