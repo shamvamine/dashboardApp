@@ -13,6 +13,7 @@ urlpatterns = [
     path('login/', login_view, name="login"),
     path('users', users_list, name='users-list'),
     path('create-user', create_user, name='create-user'),
+    path('sheq-dash', sheqDash, name='sheq-dash'),
     path('sperformance-list', safetyPrformance, name='sperformance-list'),
     path('add-sp', addSafetyPerfData, name='add-sp'), 
     path('update-sp/<int:pk>', updateSafetyData, name='update-sp'),   

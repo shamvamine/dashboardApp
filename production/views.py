@@ -86,6 +86,13 @@ def get_latest_data_month_year():
 #----------------------------- SHEQ Statistics -------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------
 
+def sheqDash(request):
+
+    context = {
+        
+    }
+    return render(request, 'production/sheqDash.html', context)
+
 def getSafetyData():                                                        #safety perfomance data view - get all data related to the safety performance model for display
     # Get the current month and year
     current_date = timezone.now()
