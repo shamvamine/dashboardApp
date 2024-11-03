@@ -257,6 +257,9 @@ def getMTDs():
    
     current_month, current_year, current_month_name = get_latest_data_month_year()  
 
+    # Initialize downtime with a default value of 0
+    downtime = 0
+
     # Filter Summaries objects for the current month
     mtd_summaries                   = Data.objects.filter(date__month=current_month, date__year=current_year)
     zesa_downtime                   = Engineering_Data.objects.filter(date__month=current_month, date__year=current_year)
