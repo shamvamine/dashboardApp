@@ -704,11 +704,7 @@ def get_daily_deltas():
     return deltas
 
 def getData(request):
-    # current_date                = timezone.now()
-    # current_month               = current_date.month
-    # current_month_name          = calendar.month_name[current_month]
-    # current_year                = current_date.year  
-
+    
     current_month, current_year, current_month_name = get_latest_data_month_year()
 
     delta_values                = get_daily_deltas()
@@ -854,10 +850,8 @@ def getData(request):
     }
     return render(request, 'home/index.html', context)
 
-
-
-
-
+#------------------------------------Production Summaries----------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 
 @login_required
 def summaries_list(request):
@@ -911,6 +905,12 @@ def update_data(request, pk):
     }
 
     return render(request, 'production/updateData.html', context)
+#---------------------------------- End of Production Summaries ---------------------------------------------
+#------------------------------------------------------------------------------------------------------------
+
+
+#---------------------------------- Targets & Budget Data ---------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 
 @login_required
 def target_data(request):
@@ -997,11 +997,11 @@ def add_budget_data(request):
     }
     return render(request, 'production/addProductionBudget.html', context)
 
-
-#----------Cost Data-----------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------------------------
+#----------------------------------- End of Targets & Budgets Views ------------------------------------------------
 
 
+#----------Cost Data------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------
 def get_costs_dash(request):
     current_date                = timezone.now()
     current_month               = current_date.month
@@ -1427,7 +1427,7 @@ def add_dept_spending(request):
 #---------------------------------------------- Gold Estimation Data -------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 @login_required
-@role_required(allowed_roles=['manager'])
+@role_required(allowed_roles=['tsd,manager'])
 def get_scats_tails(request):
     data                   = gold_estimate.objects.all().order_by('-date')
 
@@ -1440,7 +1440,7 @@ def get_scats_tails(request):
     return render(request, 'production/scatsTailsList.html', context)
 
 @login_required
-@role_required(allowed_roles=['manager'])
+@role_required(allowed_roles=['tsd,manager'])
 def addScatsTails(request):
     if request.method == 'POST':
         form = GoldEstimateForm(request.POST)
@@ -1461,7 +1461,7 @@ def addScatsTails(request):
     return render(request, 'production/addScatsTails.html', context)
 
 @login_required
-@role_required(allowed_roles=['manager'])
+@role_required(allowed_roles=['tsd, manager'])
 def updateScatsTails(request, pk):
     data                            = get_object_or_404(gold_estimate, id=pk)
     if request.method               == 'POST':
