@@ -443,47 +443,80 @@ def romValues():
     
     return rom_chart_data_json
 
+
 def get_plan_for_current_month():
-    # Get the current month and year
-    # current_date                = timezone.now()
-    # current_month               = current_date.month
-    # current_month_name          = calendar.month_name[current_month]
-    # current_year                = current_date.year   
-
+    # Get the current month, year, and day
     current_month, current_year, current_month_name = get_latest_data_month_year()
+    current_day = timezone.now().day  # Get the current day of the month
+    total_days_in_month = calendar.monthrange(current_year, current_month)[1]  # Get the number of days in the current month
 
-    # Query the budgets model for records matching the current month and year
-    budget_record               = plan.objects.filter(date__month=current_month, date__year=current_year).first()
+    # Query the plans model for records matching the current month and year
+    budget_record = plan.objects.filter(date__month=current_month, date__year=current_year).first()
     
     if budget_record:
-        # # If record exists for the current month, return the record
-        # return budget_record.values()
-        # Convert gold value from kilograms to ounces
+        # Calculate daily plan values
+        daily_rom = budget_record.rom / total_days_in_month
+        daily_milled_tonnes = budget_record.milled_tonnes / total_days_in_month
+        daily_gold = budget_record.gold / total_days_in_month
+        daily_grade = budget_record.grade / total_days_in_month
+        daily_dev_drilling = budget_record.dev_drilling / total_days_in_month
+        daily_ore_gen = budget_record.ore_gen / total_days_in_month
+        daily_recovery = budget_record.recovery / total_days_in_month
+
+        # Calculate MTD values based on the current day of the month
+        mtd_rom = daily_rom * current_day
+        mtd_milled_tonnes = daily_milled_tonnes * current_day
+        mtd_gold = daily_gold * current_day * 32.1507  # Convert MTD gold to ounces
+        mtd_grade = daily_grade * current_day
+        mtd_dev_drilling = daily_dev_drilling * current_day
+        mtd_ore_gen = daily_ore_gen * current_day
+        mtd_recovery = daily_recovery * current_day
+
+        # Convert the budget record to a dictionary with both total and MTD values
         budget_record_dict = {
-            'date'              : budget_record.date,
-            'rom'               : budget_record.rom,
-            'milled_tonnes'     : budget_record.milled_tonnes,
-            'gold'              : round((budget_record.gold * 32.1507), 4), # Convert kg to oz
-            'grade'             : budget_record.grade,
-            'dev_drilling'      : budget_record.dev_drilling,
-            'ore_gen'           : budget_record.ore_gen,
-            'recovery'          : budget_record.recovery,
-            'month_name'        : current_month_name,
+            'date': budget_record.date,
+            'rom': budget_record.rom,
+            'milled_tonnes': budget_record.milled_tonnes,
+            'gold': round(budget_record.gold * 32.1507, 4),  # Total gold in ounces
+            'grade': budget_record.grade,
+            'dev_drilling': budget_record.dev_drilling,
+            'ore_gen': budget_record.ore_gen,
+            'recovery': budget_record.recovery,
+            'month_name': current_month_name,
+
+            # MTD values
+            'mtd_rom': round(mtd_rom, 2),
+            'mtd_milled_tonnes': round(mtd_milled_tonnes, 2),
+            'mtd_gold': round(mtd_gold, 4),
+            'mtd_grade': round(mtd_grade, 2),
+            'mtd_dev_drilling': round(mtd_dev_drilling, 2),
+            'mtd_ore_gen': round(mtd_ore_gen, 2),
+            'mtd_recovery': round(mtd_recovery, 2),
         }
         return budget_record_dict
     else:
         # If no record exists, return a default record with all values set to 0
         return {
-            'date'              : timezone.now(),
-            'rom'               : 0,
-            'milled_tonnes'     : 0,
-            'gold'              : 0,
-            'grade'             : 0,
-            'dev_drilling'      : 0,
-            'ore_gen'           : 0,
-            'recovery'          : 0,
-            'month_name'        : current_month_name,
+            'date': timezone.now(),
+            'rom': 0,
+            'milled_tonnes': 0,
+            'gold': 0,
+            'grade': 0,
+            'dev_drilling': 0,
+            'ore_gen': 0,
+            'recovery': 0,
+            'month_name': current_month_name,
+
+            # Default MTD values as 0
+            'mtd_rom': 0,
+            'mtd_milled_tonnes': 0,
+            'mtd_gold': 0,
+            'mtd_grade': 0,
+            'mtd_dev_drilling': 0,
+            'mtd_ore_gen': 0,
+            'mtd_recovery': 0,
         }
+
 
 def get_budget_for_current_month():
     # Get the current month and year
@@ -491,12 +524,32 @@ def get_budget_for_current_month():
     # current_month               = current_date.month
     # current_month_name          = calendar.month_name[current_month]
     # current_year                = current_date.year  
-    current_month, current_year, current_month_name = get_latest_data_month_year() 
+    current_month, current_year, current_month_name = get_latest_data_month_year()
+    current_day = timezone.now().day  # Get the current day of the month 
+    total_days_in_month = calendar.monthrange(current_year, current_month)[1]  # Get the number of days in the current month
 
     # Query the budgets model for records matching the current month and year
     budget_record               = budget.objects.filter(date__month=current_month, date__year=current_year).first()
     
     if budget_record:
+         # Calculate daily plan values
+        daily_rom = budget_record.rom / total_days_in_month
+        daily_milled_tonnes = budget_record.milled_tonnes / total_days_in_month
+        daily_gold = budget_record.gold / total_days_in_month
+        daily_grade = budget_record.grade / total_days_in_month
+        daily_dev_drilling = budget_record.dev_drilling / total_days_in_month
+        daily_ore_gen = budget_record.ore_gen / total_days_in_month
+        daily_recovery = budget_record.recovery / total_days_in_month
+
+        # Calculate MTD values based on the current day of the month
+        mtd_rom = daily_rom * current_day
+        mtd_milled_tonnes = daily_milled_tonnes * current_day
+        mtd_gold = daily_gold * current_day * 32.1507  # Convert MTD gold to ounces
+        mtd_grade = daily_grade * current_day
+        mtd_dev_drilling = daily_dev_drilling * current_day
+        mtd_ore_gen = daily_ore_gen * current_day
+        mtd_recovery = daily_recovery * current_day
+
         # # If record exists for the current month, return the record
         # return budget_record.values()
         # Convert gold value from kilograms to ounces
@@ -510,6 +563,17 @@ def get_budget_for_current_month():
             'ore_gen'           : budget_record.ore_gen,
             'recovery'          : budget_record.recovery,
             'month_name'        : current_month_name,
+
+            # MTD values
+            'mtd_rom': round(mtd_rom, 2),
+            'mtd_milled_tonnes': round(mtd_milled_tonnes, 2),
+            'mtd_gold': round(mtd_gold, 4),
+            'mtd_grade': round(mtd_grade, 2),
+            'mtd_dev_drilling': round(mtd_dev_drilling, 2),
+            'mtd_ore_gen': round(mtd_ore_gen, 2),
+            'mtd_recovery': round(mtd_recovery, 2),
+
+            
         }
         return budget_record_dict
     else:
@@ -524,6 +588,15 @@ def get_budget_for_current_month():
             'ore_gen'           : 0,
             'recovery'          : 0,
             'month_name'        : current_month_name,
+
+             # Default MTD values as 0
+            'mtd_rom': 0,
+            'mtd_milled_tonnes': 0,
+            'mtd_gold': 0,
+            'mtd_grade': 0,
+            'mtd_dev_drilling': 0,
+            'mtd_ore_gen': 0,
+            'mtd_recovery': 0,
         }
 
 def get_mtd_deltas():
@@ -1427,7 +1500,7 @@ def add_dept_spending(request):
 #---------------------------------------------- Gold Estimation Data -------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 @login_required
-@role_required(allowed_roles=['tsd,manager'])
+@role_required(allowed_roles=['tsd','manager'])
 def get_scats_tails(request):
     data                   = gold_estimate.objects.all().order_by('-date')
 
@@ -1440,7 +1513,7 @@ def get_scats_tails(request):
     return render(request, 'production/scatsTailsList.html', context)
 
 @login_required
-@role_required(allowed_roles=['tsd,manager'])
+@role_required(allowed_roles=['tsd','manager'])
 def addScatsTails(request):
     if request.method == 'POST':
         form = GoldEstimateForm(request.POST)
@@ -1461,7 +1534,7 @@ def addScatsTails(request):
     return render(request, 'production/addScatsTails.html', context)
 
 @login_required
-@role_required(allowed_roles=['tsd, manager'])
+@role_required(allowed_roles=['tsd','manager'])
 def updateScatsTails(request, pk):
     data                            = get_object_or_404(gold_estimate, id=pk)
     if request.method               == 'POST':
