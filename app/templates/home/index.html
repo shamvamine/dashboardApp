@@ -157,15 +157,15 @@
                 <tbody>
                     <tr>
                         <td>MTD Plan</td>
-                        <td>{{plan.mtd_rom|floatformat:2|intcomma}}</td>
+                        <td>{{plan.mtd_rom|floatformat:0|intcomma}}</td>
                     </tr>
                     <tr>
                         <td>MTD Budget</td>
-                        <td>{{budget.mtd_rom|floatformat:2|intcomma}}</td>
+                        <td>{{budget.mtd_rom|floatformat:0|intcomma}}</td>
                     </tr>
                     <tr>
                       <td>MTD Actual</td>
-                      <td>{{mtd.rom|floatformat:2|intcomma}}</td>
+                      <td>{{mtd.rom|floatformat:0|intcomma}}</td>
                   </tr>
                     
                 </tbody>
@@ -243,15 +243,15 @@
                 <tbody>
                     <tr>
                         <td>MTD Plan</td>
-                        <td>{{ plan.mtd_milled_tonnes|floatformat:2|intcomma }}</td>
+                        <td>{{ plan.mtd_milled_tonnes|floatformat:0|intcomma }}</td>
                     </tr>
                     <tr>
                         <td>MTD Budget</td>
-                        <td>{{ budget.mtd_milled_tonnes|floatformat:2|intcomma}}</td>
+                        <td>{{ budget.mtd_milled_tonnes|floatformat:0|intcomma}}</td>
                     </tr>
                     <tr>
                       <td>MTD Actual</td>
-                      <td>{{mtd.milled_tonnes|floatformat:2|intcomma}}</td>
+                      <td>{{mtd.milled_tonnes|floatformat:0|intcomma}}</td>
                   </tr>
                     
                 </tbody>
@@ -326,16 +326,16 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>MTD Plan</td>
+                        <td>Plan</td>
                         <td>{{ plan.grade }}</td>
                     </tr>
                     <tr>
-                        <td>MTD Budget</td>
+                        <td>Budget</td>
                         <td>{{ budget.grade}}</td>
                     </tr>
                     <tr>
                       <td>Progressive</td>
-                      <td>{{ mtd.reconciled_grade}}</td>
+                      <td>{{ mtd.reconciled_grade|floatformat:2}}</td>
                   </tr>
                     
                 </tbody>
@@ -388,15 +388,15 @@
                 <tbody>
                     <tr>
                         <td>MTD Plan</td>
-                        <td>{{ plan.mtd_gold|floatformat:2|intcomma}}</td>
+                        <td>{{ plan.mtd_gold|floatformat:0|intcomma}}</td>
                     </tr>
                     <tr>
                         <td>MTD Budget</td>
-                        <td>{{ budget.mtd_gold|floatformat:2|intcomma}}</td>
+                        <td>{{ budget.mtd_gold|floatformat:0|intcomma}}</td>
                     </tr>
                     <tr>
                       <td>MTD Actual</td>
-                      <td>{{ mtd.gold|floatformat:2|intcomma}}</td>
+                      <td>{{ mtd.gold|floatformat:0|intcomma}}</td>
                   </tr>
                     
                 </tbody>

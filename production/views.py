@@ -15,7 +15,7 @@ from django import template
 from datetime import date
 from django.core.exceptions import PermissionDenied
 from itertools import accumulate
-
+from decimal import Decimal
 
 
 register = template.Library()
@@ -253,46 +253,54 @@ def updateEngineeringData(request, pk):
 #------------------------------------------- End of Engineering Data --------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------------
 
+
+
+from decimal import Decimal
+from django.db.models import Sum
+
 def getMTDs():
-   
-    current_month, current_year, current_month_name = get_latest_data_month_year()  
+    current_month, current_year, current_month_name = get_latest_data_month_year()
 
     # Initialize downtime with a default value of 0
     downtime = 0
 
     # Filter Summaries objects for the current month
-    mtd_summaries                   = Data.objects.filter(date__month=current_month, date__year=current_year)
-    zesa_downtime                   = Engineering_Data.objects.filter(date__month=current_month, date__year=current_year)
+    mtd_summaries = Data.objects.filter(date__month=current_month, date__year=current_year)
+    zesa_downtime = Engineering_Data.objects.filter(date__month=current_month, date__year=current_year)
 
     if zesa_downtime.exists():
-        downtime                    = zesa_downtime.aggregate(Sum('zesa_downtime'))['zesa_downtime__sum'] or 0
+        downtime = zesa_downtime.aggregate(Sum('zesa_downtime'))['zesa_downtime__sum'] or 0
 
     if mtd_summaries.exists():
         # Calculate MTD values if data exists
-        ug_tonnes                   = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
-        op_tonnes                   = mtd_summaries.aggregate(Sum('op_tonnes'))['op_tonnes__sum'] or 0
-        milled_tonnes               = mtd_summaries.aggregate(Sum('milled_tonnes'))['milled_tonnes__sum'] or 0
-        dev_drilling                = mtd_summaries.aggregate(Sum('dev_drilling'))['dev_drilling__sum'] or 0
-        ore_gen                     = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
-        gold                        = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
-        grade                       = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
-        #downtime                    = mtd_summaries.aggregate(Sum('dowmtime'))['dowmtime__sum'] or 0     
-        
-        # For reconciled grade, consider only non-zero values
-        non_zero_reconciled_grades = mtd_summaries.filter(reconciled_grade__gt=0)
-        
-        if non_zero_reconciled_grades.exists():
-            # Calculate the sum and count of non-zero reconciled grades
-            reconciled_grade_sum = non_zero_reconciled_grades.aggregate(Sum('reconciled_grade'))['reconciled_grade__sum'] or 0
-            reconciled_grade_count = non_zero_reconciled_grades.count()
+        ug_tonnes = mtd_summaries.aggregate(Sum('ug_tonnes'))['ug_tonnes__sum'] or 0
+        op_tonnes = mtd_summaries.aggregate(Sum('op_tonnes'))['op_tonnes__sum'] or 0
+        milled_tonnes = mtd_summaries.aggregate(Sum('milled_tonnes'))['milled_tonnes__sum'] or 0
+        dev_drilling = mtd_summaries.aggregate(Sum('dev_drilling'))['dev_drilling__sum'] or 0
+        ore_gen = mtd_summaries.aggregate(Sum('ore_gen'))['ore_gen__sum'] or 0
+        gold = mtd_summaries.aggregate(Sum('gold'))['gold__sum'] or 0
+        grade = mtd_summaries.aggregate(Sum('grade'))['grade__sum'] or 0
 
-            # Calculate average reconciled grade (avoid division by zero)
-            reconciled_grade = reconciled_grade_sum / reconciled_grade_count if reconciled_grade_count > 0 else 0
-        else:
-            reconciled_grade = 0
+        # Initialize totals for weighted reconciled grade calculation
+        total_weighted_reconciled_grade = Decimal(0)
+        total_milled_tonnage = Decimal(0)
+
+        # Loop through each record to calculate the weighted reconciled grade
+        for record in mtd_summaries:
+            daily_reconciled_grade = record.reconciled_grade or Decimal(0)
+            # Convert daily_milled_tonnage to Decimal explicitly
+            daily_milled_tonnage = Decimal(record.milled_tonnes or 0)
+
+            # Accumulate weighted reconciled grade and total milled tonnage
+            total_weighted_reconciled_grade += daily_reconciled_grade * daily_milled_tonnage
+            total_milled_tonnage += daily_milled_tonnage
+
+        # Calculate the weighted average reconciled grade if total milled tonnage is greater than 0
+        weighted_reconciled_grade = (total_weighted_reconciled_grade / total_milled_tonnage) if total_milled_tonnage > 0 else Decimal(0)
+
     else:
         # If no data exists, set all metrics to 0
-        ug_tonnes, op_tonnes, milled_tonnes, dev_drilling, ore_gen, gold, grade, reconciled_grade = 0, 0, 0, 0, 0, 0, 0, 0
+        ug_tonnes, op_tonnes, milled_tonnes, dev_drilling, ore_gen, gold, grade, weighted_reconciled_grade = 0, 0, 0, 0, 0, 0, 0, 0
     
     # Pass MTD values to the template
     mtd_summary = {
@@ -301,13 +309,14 @@ def getMTDs():
         'milled_tonnes': milled_tonnes,
         'dev_drilling': dev_drilling,
         'ore_gen': ore_gen,
-        'gold': round((float(gold) * 32.1507), 3),
+        'gold': round(float(gold) * 32.1507, 3),  # Convert gold from kg to oz
         'grade': float(grade),
-        'reconciled_grade': round(float(reconciled_grade), 3),
-        'downtime': round(downtime,2),
+        'reconciled_grade': round(float(weighted_reconciled_grade), 3),
+        'downtime': round(downtime, 2),
     }
     
     return mtd_summary
+
 
 
 
@@ -783,36 +792,36 @@ def getData(request):
     delta_values                = get_daily_deltas()
     
 
-    current_date = timezone.now().date()
+    current_date                = timezone.now().date()
     
     # Step 1: Get production metrics (one day behind)
-    one_day_behind = current_date - timezone.timedelta(days=1)
-    Production_data = Data.objects.filter(date=one_day_behind).first()
+    one_day_behind              = current_date - timezone.timedelta(days=1)
+    Production_data             = Data.objects.filter(date=one_day_behind).first()
 
     if not Production_data:
         # Handle case where no data exists for one day behind
-        Production_data = Data.objects.filter(date__lt=current_date).order_by('-date').first()
+        Production_data         = Data.objects.filter(date__lt=current_date).order_by('-date').first()
 
     # Step 2: Get grade data (two days behind)
-    two_days_behind = current_date - timezone.timedelta(days=2)
-    grade_data = Data.objects.filter(date=two_days_behind).first()
+    two_days_behind             = current_date - timezone.timedelta(days=2)
+    grade_data                  = Data.objects.filter(date=two_days_behind).first()
 
     if not grade_data:
         # Handle case where no data exists for two days behind
-        grade_data = Data.objects.filter(date__lt=current_date).order_by('-date').first()
+        grade_data              = Data.objects.filter(date__lt=current_date).order_by('-date').first()
 
 
     prod_data = {
-        'ug_tonnes': Production_data.ug_tonnes,
-        'op_tonnes': Production_data.op_tonnes,
-        'milled_tonnes': Production_data.milled_tonnes,
-        'gold': Production_data.gold,
-        'dev_drilling': Production_data.dev_drilling,
-        'ore_gen': Production_data.ore_gen,
-        'grade': Production_data.grade,  # Grade from two days behind
-        'recovery_perc': Production_data.recovery_perc,
-        'stock_pile': Production_data.stock_pile,
-        'date': Production_data.date
+        'ug_tonnes'             : Production_data.ug_tonnes,
+        'op_tonnes'             : Production_data.op_tonnes,
+        'milled_tonnes'         : Production_data.milled_tonnes,
+        'gold'                  : Production_data.gold,
+        'dev_drilling'          : Production_data.dev_drilling,
+        'ore_gen'               : Production_data.ore_gen,
+        'grade'                 : Production_data.grade,  # Grade from two days behind
+        'recovery_perc'         : Production_data.recovery_perc,
+        'stock_pile'            : Production_data.stock_pile,
+        'date'                  : Production_data.date
     }
 
     #prod_data                   = Data.objects.all().order_by('-date').first()
@@ -822,7 +831,7 @@ def getData(request):
         gold_oz                 = float(Production_data.gold) * 32.1507
 
         # Update the prod_data object with the gold value in ounces
-        Production_data.gold          = round(gold_oz,3)
+        Production_data.gold    = round(gold_oz,3)
         
    
     Plan                        = get_plan_for_current_month()
@@ -1075,6 +1084,13 @@ def add_budget_data(request):
 
 #----------Cost Data------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------
+
+def weekly_telex(request):
+
+    return render(request, 'home/weekly_telex.html')
+
+
+
 def get_costs_dash(request):
     current_date                = timezone.now()
     current_month               = current_date.month
