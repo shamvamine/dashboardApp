@@ -6,14 +6,14 @@
         <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
         Production Dashboard
       </a>
-      <a class="nav-link {% if 'index' in segment %} active {% endif %}" href="{%url 'costs'%}">
+      {% comment %} <a class="nav-link {% if 'index' in segment %} active {% endif %}" href="{%url 'telex'%}">
         <div class="sb-nav-link-icon"><i class="fa fa-cogs"></i></div>
         Weekly Telex
       </a>
       <a class="nav-link {% if 'index' in segment %} active {% endif %}" href="{%url 'costs'%}">
         <div class="sb-nav-link-icon"><i class="fas fa-dollar-sign"></i></div>
         Costs Dashboard
-      </a>
+      </a> {% endcomment %}
 
       <div class="sb-sidenav-menu-heading">Interface</div>
       <a
@@ -38,6 +38,8 @@
           {% if user.is_authenticated %}
             {% if request.user.profile.role == 'sheq' or request.user.profile.role == 'manager' %}          
               <a class="nav-link" href="{%url 'sperformance-list'%}">Safety Performance</a>
+              <a class="nav-link" href="{%url 'ffs-list'%}">Fatality Free Shifts</a>
+
             {% endif %}
 
             {% if request.user.profile.role == 'tsd' or request.user.profile.role == 'manager' %}

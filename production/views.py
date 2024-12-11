@@ -93,6 +93,62 @@ def sheqDash(request):
     }
     return render(request, 'production/sheqDash.html', context)
 
+@login_required
+@role_required(allowed_roles=['manager', 'sheq'])
+def fatality_free_shifts(request):
+    list                        = FatalityFreeShifts.objects.all().order_by('-date')
+
+    context                     = {
+        'title'                 : 'Fatality Free Shifts',
+        'head'                  : 'Fatality Free Shifts',
+        'ffs_list'              : list
+    }
+
+    return render (request, 'production/ffs.html', context)
+
+@login_required
+@role_required(allowed_roles=['manager', 'sheq'])
+def addFFSData(request):
+    if request.method == 'POST':
+        form = FatalityFreeShiftsForm(request.POST)
+        if form.is_valid():
+            form.save()
+            message = ( f'New record created succesfully.')
+            messages.success(request,message)
+            return redirect('ffs-list')
+    else:
+        form = FatalityFreeShiftsForm()
+
+    context = {
+        'title'                 : 'Fatality Free Shifts',
+        'head'                  : 'Input Fatality Free Shifts Data',
+        'form'                  : form
+
+    }
+    return render(request, 'production/addffsData.html', context)
+
+@login_required
+@role_required(allowed_roles=['manager', 'sheq'])
+def updateffsData(request, pk):
+    data                        = get_object_or_404(FatalityFreeShifts, id=pk)
+    if request.method           == 'POST':
+        form                    = FatalityFreeShiftsForm(request.POST or None, instance=data)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Data has been updated successfully. ')
+            return redirect('ffs-list')
+    else:
+        form                    = FatalityFreeShiftsForm(instance=data)
+
+    context = {
+        'title'                 : 'Update Fatality Free Shifts Data',
+        'head'                  : 'Update Fatality Free Shifts Data',
+        'form'                  : form,
+        'data_id'               : pk
+    }
+
+    return render(request, 'production/updateffs.html', context)
+
 def getSafetyData():                                                        #safety perfomance data view - get all data related to the safety performance model for display
     # Get the current month and year
     current_date = timezone.now()
@@ -130,6 +186,7 @@ def getSafetyData():                                                        #saf
     return mtd_summary
 
 @login_required
+@role_required(allowed_roles=['manager', 'sheq'])
 def safetyPrformance(request):
     list                        = SafetyPerformance.objects.all().order_by('-date')
 
@@ -142,6 +199,7 @@ def safetyPrformance(request):
     return render (request, 'production/safetyPerformance.html', context)
 
 @login_required
+@role_required(allowed_roles=['manager', 'sheq'])
 def addSafetyPerfData(request):
     if request.method == 'POST':
         form = SafertyPerformanceForm(request.POST)
@@ -162,6 +220,7 @@ def addSafetyPerfData(request):
     return render(request, 'production/addSafetyPerformanceData.html', context)
 
 @login_required
+@role_required(allowed_roles=['manager', 'sheq'])
 def updateSafetyData(request, pk):
     data                            = get_object_or_404(SafetyPerformance, id=pk)
     if request.method               == 'POST':
@@ -790,7 +849,10 @@ def getData(request):
     current_month, current_year, current_month_name = get_latest_data_month_year()
 
     delta_values                = get_daily_deltas()
-    
+
+    ffs                         = FatalityFreeShifts.objects.all().order_by('-date').first()
+    print(ffs)
+        
 
     current_date                = timezone.now().date()
     
@@ -926,6 +988,7 @@ def getData(request):
         'rom_chart_data'        : rom_chart_data,
         'percentages_remaining' : percentages_remaining,
         'days_since_last_lti'   : days_since_last_lti,
+        'ffs_shifts'              : ffs
         
         
 

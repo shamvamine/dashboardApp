@@ -42,7 +42,7 @@
     {% comment %} <span>Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 1 219 296 Fatality Free Shifts as of 31 August 2024 ~ |~ Gold Recovery was at {{summary.recovery_perc}}% ~ | ~ ZESA Downtime - 36hrs as of week 1 September ~ | ~ DQS Recertification Audit Completed. 2 ISO Certificates Retained QMS Certificate & EMS Certificate ~ | ~ MY SAFETY MY RESPONSIBILITY. TOTAL ELIMINATION OF ACCIDENTS -  USARASE TEA !!!</span> {% endcomment %}
     <span>
       Safety Milestones : {{days_since_last_lti}} Days Without a Lost Time Incident; 
-      1 243 409 Fatality Free Shifts as of 30 September 2024 ~ | ~ Gold Recovery for {{summary.date}} was at 
+      {{ffs_shifts.shifts}} Fatality Free Shifts as of {{ffs_shifts.date}} ~ | ~ Gold Recovery for {{summary.date}} was at 
       {% with summary.recovery_perc|floatformat:2 as actual_recovery %}
         {% with plan.recovery|floatformat:2 as planned_recovery %}
             {% if actual_recovery > planned_recovery %}
@@ -147,29 +147,34 @@
             {% comment %} <h5>{{deltas.ug_tonnes_delta|add:deltas.op_tonnes_delta}}</h5> {% endcomment %}
           
              <!-- Table for Planned and Actual/Month-To-Date Tonnage -->
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>{{plan.month_name}}</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>MTD Plan</td>
-                        <td>{{plan.mtd_rom|floatformat:0|intcomma}}</td>
-                    </tr>
-                    <tr>
-                        <td>MTD Budget</td>
-                        <td>{{budget.mtd_rom|floatformat:0|intcomma}}</td>
-                    </tr>
-                    <tr>
-                      <td>MTD Actual</td>
-                      <td>{{mtd.rom|floatformat:0|intcomma}}</td>
+             <table class="table table-bordered">
+              <thead>
+                  <tr>
+                      <th>{{ plan.month_name }}</th>
+                      <th>Value</th>
                   </tr>
-                    
-                </tbody>
-            </table>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>MTD Plan</td>
+                      <td>{{ plan.mtd_rom|floatformat:0|intcomma }}</td>
+                  </tr>
+                  <tr>
+                      <td>MTD Budget</td>
+                      <td>{{ budget.mtd_rom|floatformat:0|intcomma }}</td>
+                  </tr>
+                  <tr>
+                      <td>MTD Actual</td>
+                      <td>
+                          <span 
+                              style="{% if mtd.rom > plan.mtd_rom %}color: green;{% elif mtd.rom < plan.mtd_rom %}color: red;{% else %}color: black;{% endif %}">
+                              {{ mtd.rom|floatformat:0|intcomma }}
+                          </span>
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+          
             <!-- End of Table -->
           </div>
           
@@ -251,7 +256,12 @@
                     </tr>
                     <tr>
                       <td>MTD Actual</td>
-                      <td>{{mtd.milled_tonnes|floatformat:0|intcomma}}</td>
+                      <td>
+                        <span style="{% if mtd.milled_tonnes > plan.mtd_milled_tonnes %}color: green;{% elif mtd.milled_tonnes < plan.mtd_milled_tonnes %}color: red;{% else %}color: black;{% endif %}">
+                          {{ mtd.milled_tonnes|floatformat:0|intcomma }}
+                        </span>
+                      </td>                   
+                      
                   </tr>
                     
                 </tbody>
@@ -396,7 +406,12 @@
                     </tr>
                     <tr>
                       <td>MTD Actual</td>
-                      <td>{{ mtd.gold|floatformat:0|intcomma}}</td>
+                      <td>
+                        <span style="{% if mtd.gold > plan.mtd_gold %}color: green;{% elif mtd.gold < plan.mtd_gold %}color: red;{% else %}color: black;{% endif %}">
+                          {{ mtd.gold|floatformat:0|intcomma }}
+                        </span>
+                      </td>   
+                      
                   </tr>
                     
                 </tbody>

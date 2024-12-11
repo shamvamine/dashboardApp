@@ -496,6 +496,25 @@ class DeptSpendingForm(forms.ModelForm):
             super().__init__(*args, **kwargs)
             self.fields['date'].input_formats = ['%Y-%m-%d']
 
+
+
+class FatalityFreeShiftsForm(forms.ModelForm):
+    class Meta:
+        model                       = FatalityFreeShifts
+        fields                      = ['date', 'shifts']
+        widgets                     = {
+            'date'                  : forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date',  'class':'form-control'}),
+            'shifts'                : forms.TextInput(attrs={'type':'text', 'class':'form-control'}),
+        }
+        labels                      = {
+            'date'                  : 'Date',
+            'shifts'                : 'Shifts',
+        }
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['date'].input_formats = ['%Y-%m-%d']
+
+
 class SafertyPerformanceForm(forms.ModelForm):
     class Meta:
         model                       = SafetyPerformance
